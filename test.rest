@@ -1,0 +1,73 @@
+### Admin
+POST http://localhost:45000/admin/login HTTP/1.1
+Content-Type: application/json
+
+{
+"username":"superadmin",
+"password": "123456"
+}
+
+###
+POST http://localhost:45000/admin/add-game-mapping HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyYWRtaW4iLCJpYXQiOjE2NjUxMjgyMzl9.xl0779UEZXyhYq2XbqazV-cD55EVgzi00Nbdskckj9I
+
+{
+"username":"Superadmin"
+}
+
+###
+POST http://localhost:45000/admin/get-pay-method HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyYWRtaW4iLCJpYXQiOjE2NjUxMjgyMzl9.xl0779UEZXyhYq2XbqazV-cD55EVgzi00Nbdskckj9I
+
+{
+"username":"Superadmin"
+}
+
+###
+POST http://localhost:45000/admin/get-payment-details HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IlN1cGVyYWRtaW4iLCJpYXQiOjE2NjUxMjgyMzl9.xl0779UEZXyhYq2XbqazV-cD55EVgzi00Nbdskckj9I
+
+{
+"username":"Superadmin"
+}
+
+###
+POST http://localhost:45000/user/login HTTP/1.1
+Content-Type: application/json
+
+{
+"mobile":"8920529661",
+"password": "123456"
+}
+### User
+POST http://localhost:45000/user/get-all HTTP/1.1
+Content-Type: application/json
+
+{
+
+}
+### 
+POST http://localhost:45000/user/user-details HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ijg5MjA1Mjk2NjEiLCJpYXQiOjE2NjU0MDAwMjZ9.ykvTKz5_SayJqdzRaNjQt8JU-S4i7NdNbEFc9U_T5yA
+
+{
+"mobile":"8920529661"
+}
+
+###
+DELETE http://localhost:4500/admin/del HTTP/1.1
+
+{
+
+}
+
+###
+POST http://localhost:4500/admin/add-number HTTP/1.1
+
+{
+    
+}
