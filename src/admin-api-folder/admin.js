@@ -80,7 +80,7 @@ app.post("/login", (req, res) => {
                   (err, token) => {
                     if (err) throw err;
                     else
-                      con.query("UPDATE `login` SET `is_active`='Y' WHERE `username` = ?", [req.body.username])
+                      con.query("UPDATE `login` SET `device_logged_in`='Y' WHERE `username` = ?", [req.body.username])
                     res.status(200).json({
                       status: true,
                       username: result[0].username,
@@ -115,7 +115,7 @@ app.post("/login", (req, res) => {
                   (err, token) => {
                     if (err) throw err;
                     else
-                      con.query("UPDATE `login` SET `is_active`='Y' WHERE `username` = ?", [req.body.username])
+                      con.query("UPDATE `login` SET `device_logged_in`='Y' WHERE `username` = ?", [req.body.username])
                     res.status(200).json({
                       status: true,
                       username: result[0].username,
@@ -143,7 +143,7 @@ app.post("/login", (req, res) => {
   })
 });
 app.post("/logout", (req, res) => {
-  con.query("UPDATE `login` SET `is_active`='N' WHERE `username` = ?", [req.body.username], (err, result) => {
+  con.query("UPDATE `login` SET `device_logged_in`='N' WHERE `username` = ?", [req.body.username], (err, result) => {
     if (err) { throw err; }
     if (result) {
       res.status(200).send({ error: false, status: true })
@@ -309,7 +309,7 @@ app.post("/update-admin", verifytoken, (req, res) => {
   })
 });
 app.post("/get-admin", verifytoken, (req, res) => {
-  con.query("SELECT l.id,l.name ,l.username, (IFNULL((select role.display_name FROM role WHERE role.id = ra.role_id),'Not Assign')) as role,l.date,l.is_active,l.status  FROM `login` as l LEFT JOIN role_assign as ra on l.id = ra.user_id;", (err, result) => {
+  con.query("SELECT l.id,l.name ,l.username, (IFNULL((select role.display_name FROM role WHERE role.id = ra.role_id),'Not Assign')) as role,l.date,l.device_logged_in,l.status  FROM `login` as l LEFT JOIN role_assign as ra on l.id = ra.user_id;", (err, result) => {
     if (err) throw err;
     if (result) {
       res.status(200).send({ error: false, status: true, data: result });
@@ -345,7 +345,7 @@ app.post("/add-activity_maping", verifytoken, (req, res) => {
       if (err) throw err;
       if (result[0] == null) {
         con.query(
-          "INSERT INTO `activity_maping`(`activity_name`, `active_url`,`is_active`,`show_manu`) VALUES (?,?,?,?)",
+          "INSERT INTO `activity_maping`(`activity_name`, `active_url`,`device_logged_in`,`show_manu`) VALUES (?,?,?,?)",
           [req.body.name, req.body.url, req.body.status, req.body.manu],
           (err, result) => {
             if (err) throw err;
@@ -391,7 +391,7 @@ app.post("/status-user", verifytoken, (req, res) => {
 });
 
 app.post("/get-total-data", verifytoken, (req, res) => {
-  con.query("SELECT (select IFNULL(COUNT(*), 0) from user_details) as total_user,(select IFNULL(COUNT(*), 0) from user_details WHERE is_active = 'Y') as active_user,(SELECT IFNULL(SUM(balance), 0) FROM `withdrawal` WHERE status ='Success') as total_w,(SELECT IFNULL(COUNT(*),0) FROM `withdrawal` WHERE status = 'Pending') as total_wr,(SELECT IFNULL(SUM(balance), 0) FROM `deposit` WHERE status = 'Success') as total_d,(SELECT IFNULL(COUNT(*), 0) FROM `deposit` WHERE status = 'Pending') as total_dr;", (ro_err, ro_result) => {
+  con.query("SELECT (select IFNULL(COUNT(*), 0) from user_details) as total_user,(select IFNULL(COUNT(*), 0) from user_details WHERE device_logged_in = 'Y') as active_user,(SELECT IFNULL(SUM(balance), 0) FROM `withdrawal` WHERE status ='Success') as total_w,(SELECT IFNULL(COUNT(*),0) FROM `withdrawal` WHERE status = 'Pending') as total_wr,(SELECT IFNULL(SUM(balance), 0) FROM `deposit` WHERE status = 'Success') as total_d,(SELECT IFNULL(COUNT(*), 0) FROM `deposit` WHERE status = 'Pending') as total_dr;", (ro_err, ro_result) => {
     if (ro_err) throw ro_err;
     if (ro_result) {
       res.status(200).json({
@@ -561,11 +561,11 @@ app.post("/update-module", (req, res) => {
   );
 });
 app.post("/del-module", verifytoken, (req, res) => {
-  con.query("DELETE FROM `assign_module` WHERE `module`=?", [req.body.id],(error,resultt)=>{
-    if(error){
+  con.query("DELETE FROM `assign_module` WHERE `module`=?", [req.body.id], (error, resultt) => {
+    if (error) {
       throw error;
     }
-    if(resultt){
+    if (resultt) {
       con.query("DELETE FROM `module` where id=?", [req.body.id], (err, result) => {
         if (err) throw err;
         else {
@@ -1284,6 +1284,240 @@ app.post("/decline-withdrawal-request", verifytoken, (req, res) => {
       }
     }
   );
+});
+
+app.post("/add-team", verifytoken, (req, res) => {
+  con.query(
+    "SELECT * FROM `teams` WHERE `team_name` = ?",
+    [req.body.team_name],
+    (err, result) => {
+      if (err) throw err;
+      if (result.length == 0) {
+        con.query(
+          "SELECT * FROM `teams` WHERE `short_name` = ?",
+          [req.body.short_name],
+          (errt, resultt) => {
+            if (errt) throw errt;
+            if (resultt.length == 0) {
+              con.query(
+                "INSERT INTO `teams`(`team_name`, `short_name`) VALUES (?,?)",
+                [req.body.team_name, req.body.short_name],
+                (err, result) => {
+                  if (err) throw err;
+                  else {
+                    res.status(200).send(true);
+                  }
+                }
+              );
+            } else {
+              res.status(302).send("Shortname is already exist");
+            }
+          }
+        );
+      } else {
+        res.status(302).send("Teamname is already exist");
+      }
+    }
+  );
+});
+app.post("/get-team", verifytoken, (req, res) => {
+  con.query("select * from `teams`", (err, result) => {
+    if (err) throw err;
+    else {
+      res.status(200).send({ data: result });
+    }
+  });
+});
+app.post("/status-team", verifytoken, (req, res) => {
+  con.query(
+    "UPDATE `teams` SET `status`= ? WHERE `id`=?",
+    [req.body.status, req.body.id],
+    (err, result) => {
+      if (err) throw err;
+      else {
+        res.status(200).send(true);
+      }
+    }
+  );
+});
+app.post("/update-team", verifytoken, (req, res) => {
+  con.query(
+    "UPDATE `teams` SET `team_name`=?,`short_name`=? WHERE `id`=?",
+    [req.body.team_name, req.body.short_name, req.body.id],
+    (err, result) => {
+      if (err) {
+        if (err.code == "ER_DUP_ENTRY") {
+          const bearer = ((err.sqlMessage.split(" ")).pop().split(".")).pop().split("'");
+          if (bearer[0] == "short_name") {
+            res.status(403).send("Shortname is already exist");
+          }
+          if (bearer[0] == "team_name") {
+            res.status(403).send("Teamname is already exist");
+          }
+        }
+      } else {
+        res.status(200).send(true);
+      }
+    }
+  );
+});
+app.post("/del-team", verifytoken, (req, res) => {
+  con.query("DELETE FROM `teams` where id=?", [req.body.id], (err, result) => {
+    if (err) throw err;
+    else {
+      res.status(200).send(true);
+    }
+  });
+});
+
+app.post("/add-series", verifytoken, (req, res) => {
+  con.query(
+    "SELECT * FROM `series` WHERE `series_name` = ?",
+    [req.body.series_name],
+    (err, result) => {
+      if (err) throw err;
+      if (result.length == 0) {
+        con.query(
+          "INSERT INTO `series`(`series_name`, `series_type`) VALUES (?,?)",
+          [req.body.series_name, req.body.series_type],
+          (err, result) => {
+            if (err) throw err;
+            if (result) {
+              res.status(200).send(true);
+            }
+          }
+        );
+      } else {
+        res.status(302).send("Teamname is already exist");
+      }
+    }
+  );
+});
+app.post("/get-series", verifytoken, (req, res) => {
+  con.query("select * from `series`", (err, result) => {
+    if (err) throw err;
+    else {
+      res.status(200).send({ data: result });
+    }
+  });
+});
+app.post("/status-series", verifytoken, (req, res) => {
+  con.query(
+    "UPDATE `series` SET `status`= ? WHERE `id`=?",
+    [req.body.status, req.body.id],
+    (err, result) => {
+      if (err) throw err;
+      else {
+        res.status(200).send(true);
+      }
+    }
+  );
+});
+app.post("/update-series", verifytoken, (req, res) => {
+  con.query(
+    "UPDATE `series` SET `series_name`=?,`series_type`=? WHERE `id`=?",
+    [req.body.series_name, req.body.series_type, req.body.id],
+    (err, result) => {
+      if (err) {
+        if (err.code == "ER_DUP_ENTRY") {
+          const bearer = ((err.sqlMessage.split(" ")).pop().split(".")).pop().split("'");
+          if (bearer[0] == "series_name") {
+            res.status(403).send("Series name is already exist");
+          }
+        }
+      } if(result) {
+        res.status(200).send(true);
+      }
+    }
+  );
+});
+app.post("/del-series", verifytoken, (req, res) => {
+  con.query("DELETE FROM `series` where id=?", [req.body.id], (err, result) => {
+    if (err) throw err;
+    else {
+      res.status(200).send(true);
+    }
+  });
+});
+
+app.post("/add-match", verifytoken, (req, res) => {
+  con.query(
+    "INSERT INTO `match`( `team1_id`, `team2_id`, `series_id`, `match_date`) VALUES (?,?,?,?)",
+    [req.body.team_one, req.body.team_two, req.body.series_id, req.body.match_date],
+    (err, result) => {
+      if (err) throw err;
+      if (result) {
+        res.status(200).send(true);
+      }
+    }
+  );
+  // con.query(
+  //   "SELECT * FROM `series` WHERE `series_name` = ?",
+  //   [req.body.series_name],
+  //   (err, result) => {
+  //     if (err) throw err;
+  //     if (result.length == 0) {
+  //       con.query(
+  //         "INSERT INTO `match`( `team1_id`, `team2_id`, `series_id`, `match_date`) VALUES (?,?,?,?)",
+  //         [req.body.series_name, req.body.series_type],
+  //         (err, result) => {
+  //           if (err) throw err;
+  //           if (result) {
+  //             res.status(200).send(true);
+  //           }
+  //         }
+  //       );
+  //     } else {
+  //       res.status(302).send("Teamname is already exist");
+  //     }
+  //   }
+  // );
+});
+app.post("/get-match", verifytoken, (req, res) => {
+  con.query("SELECT m.id,t1.team_name as team1_name,t2.team_name as team2_name,s.series_name,m.team1_id,m.team2_id,m.series_id,m.result,m.status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id", (err, result) => {
+    if (err) throw err;
+    else {
+      res.status(200).send({ data: result });
+    }
+  });
+});
+app.post("/status-match", verifytoken, (req, res) => {
+  con.query(
+    "UPDATE `match` SET `status`= ? WHERE `id`=?",
+    [req.body.status, req.body.id],
+    (err, result) => {
+      if (err) throw err;
+      else {
+        res.status(200).send(true);
+      }
+    }
+  );
+});
+app.post("/update-match", verifytoken, (req, res) => {
+  con.query(
+    "UPDATE `match` SET `team1_id`=?,`team2_id`=?,`series_id`=?,`match_date`=? WHERE `id` = ?",
+    [req.body.team_one, req.body.team_two, req.body.series_id, req.body.match_date,req.body.id],
+    (err, result) => {
+      if (err) {
+        if (err.code == "ER_DUP_ENTRY") {
+          const bearer = ((err.sqlMessage.split(" ")).pop().split(".")).pop().split("'");
+          if (bearer[0] == "series_name") {
+            res.status(403).send("Series name is already exist");
+          }
+        }
+      } if(result) {
+        res.status(200).send(true);
+      }
+    }
+  );
+});
+app.post("/del-match", verifytoken, (req, res) => {
+  con.query("DELETE FROM `match` where id=?", [req.body.id], (err, result) => {
+    if (err) throw err;
+    else {
+      res.status(200).send(true);
+    }
+  });
 });
 
 function verifytoken(req, res, next) {
