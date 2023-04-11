@@ -1541,7 +1541,7 @@ app.post("/add-prediction", verifytoken, (req, res) => {
   );
  });
 app.post("/get-prediction", verifytoken, (req, res) => {
-  con.query("SELECT m.id,t1.team_name as team1_name,t2.team_name as team2_name,s.series_name,m.team1_id,m.team2_id,m.series_id,m.result,m.status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id", (err, result) => {
+  con.query("SELECT (SELECT `team_name` FROM `teams` WHERE `id` = m.team1_id) as team1_name,(SELECT `short_name` FROM `teams` WHERE `id` = m.team1_id) as team1_sname,(SELECT `team_name` FROM `teams` WHERE `id` = m.team2_id) as team2_name,(SELECT `short_name` FROM `teams` WHERE `id` = m.team2_id) as team2_sname,(SELECT `series_type` FROM `series` WHERE `id` = m.series_id) as series_type,(SELECT `series_name` FROM `series` WHERE `id` = m.series_id) as series_name,mp.pre_question,mp.pre_answer,mp.status,m.match_date FROM `match_prediction` as mp INNER join `match` as m on mp.match_id = m.id", (err, result) => {
     if (err) throw err;
     else {
       res.status(200).send({ data: result });
@@ -1550,7 +1550,7 @@ app.post("/get-prediction", verifytoken, (req, res) => {
 });
 app.post("/status-prediction", verifytoken, (req, res) => {
   con.query(
-    "UPDATE `match` SET `status`= ? WHERE `id`=?",
+    "UPDATE `match_prediction` SET `status`= ? WHERE `id`=?",
     [req.body.status, req.body.id],
     (err, result) => {
       if (err) throw err;
@@ -1579,7 +1579,7 @@ app.post("/update-prediction", verifytoken, (req, res) => {
   );
 });
 app.post("/del-prediction", verifytoken, (req, res) => {
-  con.query("DELETE FROM `match` where id=?", [req.body.id], (err, result) => {
+  con.query("DELETE FROM `match_prediction` where id=?", [req.body.id], (err, result) => {
     if (err) throw err;
     else {
       res.status(200).send(true);

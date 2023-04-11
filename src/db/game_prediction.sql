@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Generation Time: Mar 31, 2023 at 07:05 AM
+-- Generation Time: Apr 11, 2023 at 08:56 AM
 -- Server version: 8.0.31
 -- PHP Version: 8.1.6
 
@@ -21,6 +21,25 @@ SET time_zone = "+00:00";
 -- Database: `game_prediction`
 --
 
+DELIMITER $$
+--
+-- Procedures
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `Register` (IN `mobile` VARCHAR(50), IN `uname` VARCHAR(50))   BEGIN
+declare a2 varchar(50) default 0;
+   label: LOOP
+   set a2 = FLOOR(RAND() * 100000000);
+   if (0 = (SELECT count(*) FROM `user_details` WHERE `referral_id` = a2)) THEN
+    INSERT INTO `user_details`(`name`,`user_name`,`referral_id`) VALUES (uname,mobile,a2);
+    INSERT INTO `wallet`(`user_name`, `wallet_balance`) VALUES (mobile,0);
+    select 1 as status,a2 as referral_id;
+   LEAVE label;
+		end if;
+   END LOOP label;
+END$$
+
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -33,7 +52,7 @@ CREATE TABLE `assign_module` (
   `module` int NOT NULL,
   `status` varchar(1) NOT NULL DEFAULT 'Y',
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `assign_module`
@@ -44,30 +63,22 @@ INSERT INTO `assign_module` (`id`, `role`, `module`, `status`, `date`) VALUES
 (169, 5, 13, 'Y', '2023-02-21 09:19:53'),
 (170, 5, 18, 'Y', '2023-02-21 09:19:53'),
 (171, 5, 20, 'Y', '2023-02-21 09:19:53'),
-(172, 5, 25, 'Y', '2023-02-21 09:19:53'),
-(173, 5, 26, 'Y', '2023-02-21 09:19:53'),
-(174, 5, 27, 'Y', '2023-02-21 09:19:53'),
 (175, 5, 28, 'Y', '2023-02-21 09:19:53'),
-(176, 5, 29, 'Y', '2023-02-21 09:19:53'),
 (177, 5, 30, 'Y', '2023-02-21 09:19:53'),
 (178, 6, 1, 'Y', '2023-03-03 06:05:51'),
 (179, 6, 18, 'Y', '2023-03-03 06:05:51'),
 (180, 6, 13, 'Y', '2023-03-03 06:05:51'),
-(181, 6, 26, 'Y', '2023-03-03 06:05:51'),
-(182, 6, 25, 'Y', '2023-03-03 06:05:51'),
 (183, 6, 28, 'Y', '2023-03-03 06:05:51'),
-(184, 6, 27, 'Y', '2023-03-03 06:05:51'),
-(237, 3, 29, 'Y', '2023-03-29 09:03:48'),
-(238, 3, 1, 'Y', '2023-03-29 09:03:48'),
-(239, 3, 13, 'Y', '2023-03-29 09:03:48'),
-(240, 3, 30, 'Y', '2023-03-29 09:03:48'),
-(241, 3, 32, 'Y', '2023-03-29 09:03:48'),
-(242, 3, 18, 'Y', '2023-03-29 09:03:48'),
-(243, 3, 26, 'Y', '2023-03-29 09:03:48'),
-(244, 3, 20, 'Y', '2023-03-29 09:03:48'),
-(245, 3, 27, 'Y', '2023-03-29 09:03:48'),
-(246, 3, 25, 'Y', '2023-03-29 09:03:48'),
-(247, 3, 28, 'Y', '2023-03-29 09:03:48');
+(323, 3, 39, 'Y', '2023-04-06 05:28:16'),
+(324, 3, 1, 'Y', '2023-04-06 05:28:16'),
+(325, 3, 13, 'Y', '2023-04-06 05:28:16'),
+(326, 3, 18, 'Y', '2023-04-06 05:28:16'),
+(327, 3, 20, 'Y', '2023-04-06 05:28:16'),
+(328, 3, 28, 'Y', '2023-04-06 05:28:16'),
+(329, 3, 30, 'Y', '2023-04-06 05:28:16'),
+(330, 3, 32, 'Y', '2023-04-06 05:28:16'),
+(331, 3, 33, 'Y', '2023-04-06 05:28:16'),
+(332, 3, 40, 'Y', '2023-04-06 05:28:16');
 
 -- --------------------------------------------------------
 
@@ -84,7 +95,7 @@ CREATE TABLE `bank_details` (
   `status` varchar(1) NOT NULL DEFAULT 'Y',
   `action` varchar(200) NOT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -99,12 +110,12 @@ CREATE TABLE `deposit` (
   `image` varchar(200) NOT NULL,
   `transaction_id` varchar(50) NOT NULL,
   `payment` varchar(50) NOT NULL,
-  `status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Pending',
-  `reason` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '.',
-  `Approved_declined_By` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Not Approved',
+  `status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'Pending',
+  `reason` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '.',
+  `Approved_declined_By` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'Not Approved',
   `paymethod_id` int NOT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -117,18 +128,64 @@ CREATE TABLE `login` (
   `name` varchar(10) NOT NULL,
   `username` varchar(100) NOT NULL,
   `password` varchar(100) NOT NULL,
-  `is_active` varchar(1) NOT NULL DEFAULT 'N',
-  `status` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Y',
+  `device_logged_in` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'N',
+  `status` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'Y',
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `login`
 --
 
-INSERT INTO `login` (`id`, `name`, `username`, `password`, `is_active`, `status`, `date`) VALUES
+INSERT INTO `login` (`id`, `name`, `username`, `password`, `device_logged_in`, `status`, `date`) VALUES
 (14, 'Kumar Ji', 'Superadmin', '$2b$12$JZZL/FuFOD.ibnxlComhVuWe7YzDq1zswgezphrzLk.Auq1wLuqGW', 'Y', 'Y', '2022-07-29 00:02:44'),
 (15, 'testing', 'test', '$2b$10$mh/WZV1LwVEnxzoTa5rKiuUOZT2urb81itGLIV73yiJ/rAgmwSHDi', 'N', 'Y', '2023-03-03 06:05:15');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `match`
+--
+
+CREATE TABLE `match` (
+  `id` int NOT NULL,
+  `team1_id` int NOT NULL,
+  `team2_id` int NOT NULL,
+  `series_id` int NOT NULL,
+  `match_date` datetime NOT NULL,
+  `result` varchar(1) NOT NULL DEFAULT 'U',
+  `status` varchar(1) NOT NULL DEFAULT 'Y',
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `match`
+--
+
+INSERT INTO `match` (`id`, `team1_id`, `team2_id`, `series_id`, `match_date`, `result`, `status`, `date`) VALUES
+(1, 2, 1, 2, '2023-04-12 15:30:00', 'U', 'Y', '2023-04-03 09:43:57');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `match_prediction`
+--
+
+CREATE TABLE `match_prediction` (
+  `id` int NOT NULL,
+  `match_id` int NOT NULL,
+  `pre_question` varchar(100) NOT NULL,
+  `pre_answer` varchar(100) NOT NULL,
+  `status` varchar(1) NOT NULL DEFAULT 'Y',
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `match_prediction`
+--
+
+INSERT INTO `match_prediction` (`id`, `match_id`, `pre_question`, `pre_answer`, `status`, `date`) VALUES
+(1, 1, '10 Over', '55 Runs', 'Y', '2023-04-05 06:57:39');
 
 -- --------------------------------------------------------
 
@@ -142,7 +199,7 @@ CREATE TABLE `module` (
   `url` varchar(200) NOT NULL,
   `status` varchar(1) NOT NULL DEFAULT 'Y',
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `module`
@@ -153,13 +210,12 @@ INSERT INTO `module` (`id`, `module_name`, `url`, `status`, `date`) VALUES
 (13, 'module', '/home/module', 'Y', '2022-07-26 05:55:10'),
 (18, 'role', '/home/role', 'Y', '2022-08-03 00:44:23'),
 (20, 'activity mapping', '/home/activity-mapping', 'Y', '2022-08-05 00:35:20'),
-(25, 'Withdrawal', '/home/withdrawal', 'Y', '2022-10-10 11:56:54'),
-(26, 'Deposit', '/home/deposit', 'Y', '2022-10-10 11:57:34'),
-(27, 'Payment Details', '/home/payment-details', 'Y', '2022-10-12 07:45:17'),
 (28, 'User Details', '/home/user-details', 'Y', '2022-10-19 05:26:14'),
-(29, 'User Bank Details', '/home/user-bank-details', 'Y', '2022-11-09 09:43:52'),
 (30, 'Sub-Admin', '/home/sub-admin', 'Y', '2023-02-16 09:55:26'),
-(32, 'Matches', 'matches', 'Y', '2023-03-29 09:03:34');
+(32, 'Matches', 'matches', 'Y', '2023-03-29 09:03:34'),
+(33, 'Team', '/home/team', 'Y', '2023-03-31 05:56:14'),
+(39, 'Series', '/home/series', 'Y', '2023-04-06 05:27:23'),
+(40, 'Prediction', '/home/prediction', 'Y', '2023-04-06 05:28:06');
 
 -- --------------------------------------------------------
 
@@ -180,7 +236,14 @@ CREATE TABLE `payment_details` (
   `account_type` varchar(45) DEFAULT NULL,
   `status` varchar(1) NOT NULL DEFAULT 'N',
   `Date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `payment_details`
+--
+
+INSERT INTO `payment_details` (`id`, `paymethod_id`, `name`, `UPI_id`, `QR_code`, `icons`, `bank_name`, `account_no`, `ifsc_code`, `account_type`, `status`, `Date`) VALUES
+(27, 3, 'pay', 'paus@mnsd', 'qr_code-1680512428915-753544602.png', 'paytm.png', NULL, NULL, NULL, NULL, 'N', '2023-04-03 09:00:28');
 
 -- --------------------------------------------------------
 
@@ -194,7 +257,7 @@ CREATE TABLE `payment_method` (
   `icon` varchar(50) NOT NULL,
   `status` varchar(1) NOT NULL DEFAULT 'Y',
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `payment_method`
@@ -216,14 +279,14 @@ CREATE TABLE `role` (
   `id` int NOT NULL,
   `name` varchar(100) NOT NULL,
   `display_name` varchar(100) NOT NULL,
-  `view` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `delete_d` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `update_d` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `play_btn` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
-  `role_assign` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'N',
+  `view` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `delete_d` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `update_d` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `play_btn` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `role_assign` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'N',
   `status` varchar(1) NOT NULL DEFAULT 'N',
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `role`
@@ -246,7 +309,7 @@ CREATE TABLE `role_assign` (
   `role_id` int NOT NULL,
   `status` varchar(1) NOT NULL DEFAULT 'Y',
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `role_assign`
@@ -259,21 +322,66 @@ INSERT INTO `role_assign` (`id`, `user_id`, `role_id`, `status`, `date`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `series`
+--
+
+CREATE TABLE `series` (
+  `id` int NOT NULL,
+  `series_name` varchar(200) NOT NULL,
+  `series_type` varchar(200) NOT NULL,
+  `status` varchar(1) NOT NULL DEFAULT 'Y',
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `series`
+--
+
+INSERT INTO `series` (`id`, `series_name`, `series_type`, `status`, `date`) VALUES
+(1, 'Indian Premium League', 'T-20', 'Y', '2023-04-03 06:29:55'),
+(2, ' One Day Internationals', 'ODI', 'Y', '2023-04-03 08:29:46');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `statement`
 --
 
 CREATE TABLE `statement` (
   `id` int NOT NULL,
-  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `bet_or_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `period` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `username` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `bet_or_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `period` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `Select` varchar(50) DEFAULT NULL,
-  `bet_from` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `bet_balance` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `total_balance` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Y',
+  `bet_from` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `bet_balance` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `total_balance` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
+  `status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'Y',
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `teams`
+--
+
+CREATE TABLE `teams` (
+  `id` int NOT NULL,
+  `team_name` varchar(100) NOT NULL,
+  `short_name` varchar(100) NOT NULL,
+  `status` varchar(1) NOT NULL DEFAULT 'Y',
+  `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `teams`
+--
+
+INSERT INTO `teams` (`id`, `team_name`, `short_name`, `status`, `date`) VALUES
+(1, 'India', 'IND', 'Y', '2023-03-31 11:22:09'),
+(2, 'Pakistan', 'PAK', 'Y', '2023-03-31 11:33:20'),
+(3, 'South Afrika', 'SA', 'Y', '2023-03-31 11:51:12');
 
 -- --------------------------------------------------------
 
@@ -284,16 +392,16 @@ CREATE TABLE `statement` (
 CREATE TABLE `userbankdeatils` (
   `id` int NOT NULL,
   `username` varchar(250) NOT NULL,
-  `account_no` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `account_no` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `ifsc_code` varchar(100) DEFAULT NULL,
   `account_holder_name` varchar(100) NOT NULL,
   `bankname` varchar(100) DEFAULT NULL,
   `account_type` varchar(100) DEFAULT NULL,
-  `status` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Pending',
-  `approved_or_denied_by` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'Not Approved',
-  `reason` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `status` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'Pending',
+  `approved_or_denied_by` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT 'Not Approved',
+  `reason` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -308,7 +416,7 @@ CREATE TABLE `usernumberdetails` (
   `number` varchar(50) NOT NULL,
   `type` varchar(50) NOT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -322,7 +430,7 @@ CREATE TABLE `userupidetails` (
   `name` varchar(50) NOT NULL,
   `UPI_id` varchar(50) NOT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- --------------------------------------------------------
 
@@ -334,17 +442,21 @@ CREATE TABLE `user_details` (
   `id` int NOT NULL,
   `name` varchar(100) NOT NULL,
   `user_name` varchar(200) NOT NULL,
-  `device_logged_in` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'N',
+  `device_logged_in` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'Y',
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `referral_id` varchar(100) NOT NULL,
+  `reffer_bb` varchar(100) NOT NULL,
   `status` varchar(1) DEFAULT 'Y'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `user_details`
 --
 
-INSERT INTO `user_details` (`id`, `name`, `user_name`, `device_logged_in`, `date`, `status`) VALUES
-(11, 'Rahul', '9794368090', 'N', '2023-02-23 06:08:07', 'Y');
+INSERT INTO `user_details` (`id`, `name`, `user_name`, `device_logged_in`, `date`, `referral_id`, `reffer_bb`, `status`) VALUES
+(11, 'Rahul', '9794368090', 'Y', '2023-02-23 06:08:07', '', '', 'Y'),
+(16, 'Sudanshu Maurya', '9794379120', 'Y', '2023-04-10 10:25:10', '77172745', '', 'Y'),
+(17, 'Sudanshu Maurya', '979437910', 'Y', '2023-04-10 10:45:26', '50342068', '', 'Y');
 
 -- --------------------------------------------------------
 
@@ -356,18 +468,19 @@ CREATE TABLE `wallet` (
   `id` int NOT NULL,
   `user_name` varchar(200) NOT NULL,
   `wallet_balance` varchar(200) NOT NULL,
-  `Winning_wallet` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '0',
+  `Winning_wallet` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '0',
   `Bonus_wallet` varchar(50) NOT NULL DEFAULT '0',
   `status` varchar(1) NOT NULL DEFAULT 'Y',
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Dumping data for table `wallet`
 --
 
 INSERT INTO `wallet` (`id`, `user_name`, `wallet_balance`, `Winning_wallet`, `Bonus_wallet`, `status`, `date`) VALUES
-(10, '9794368090', '2000', '0', '0', 'Y', '2023-02-23 06:08:07');
+(10, '9794368090', '2000', '0', '0', 'Y', '2023-02-23 06:08:07'),
+(15, '979437910', '0', '0', '0', 'Y', '2023-04-10 10:25:10');
 
 -- --------------------------------------------------------
 
@@ -379,13 +492,13 @@ CREATE TABLE `withdrawal` (
   `id` int NOT NULL,
   `user_name` varchar(200) NOT NULL,
   `balance` varchar(200) NOT NULL,
-  `Approved_declined_By` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Not Approved',
-  `status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Pending',
+  `Approved_declined_By` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'Not Approved',
+  `status` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'Pending',
   `paymethod_id` int NOT NULL,
   `paytype` varchar(50) NOT NULL,
-  `reason` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `reason` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Indexes for dumped tables
@@ -419,6 +532,22 @@ ALTER TABLE `deposit`
 ALTER TABLE `login`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `user` (`username`);
+
+--
+-- Indexes for table `match`
+--
+ALTER TABLE `match`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `team_one` (`team1_id`),
+  ADD KEY `team_two` (`team2_id`),
+  ADD KEY `series_id` (`series_id`);
+
+--
+-- Indexes for table `match_prediction`
+--
+ALTER TABLE `match_prediction`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `match_match` (`match_id`);
 
 --
 -- Indexes for table `module`
@@ -459,10 +588,25 @@ ALTER TABLE `role_assign`
   ADD KEY `role` (`role_id`);
 
 --
+-- Indexes for table `series`
+--
+ALTER TABLE `series`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `series_name` (`series_name`);
+
+--
 -- Indexes for table `statement`
 --
 ALTER TABLE `statement`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `teams`
+--
+ALTER TABLE `teams`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `team_name` (`team_name`),
+  ADD UNIQUE KEY `short_name` (`short_name`);
 
 --
 -- Indexes for table `userbankdeatils`
@@ -512,7 +656,7 @@ ALTER TABLE `withdrawal`
 -- AUTO_INCREMENT for table `assign_module`
 --
 ALTER TABLE `assign_module`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=248;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=333;
 
 --
 -- AUTO_INCREMENT for table `bank_details`
@@ -533,16 +677,28 @@ ALTER TABLE `login`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
+-- AUTO_INCREMENT for table `match`
+--
+ALTER TABLE `match`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `match_prediction`
+--
+ALTER TABLE `match_prediction`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT for table `module`
 --
 ALTER TABLE `module`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
 -- AUTO_INCREMENT for table `payment_details`
 --
 ALTER TABLE `payment_details`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `payment_method`
@@ -563,10 +719,22 @@ ALTER TABLE `role_assign`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
+-- AUTO_INCREMENT for table `series`
+--
+ALTER TABLE `series`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `statement`
 --
 ALTER TABLE `statement`
   MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1136;
+
+--
+-- AUTO_INCREMENT for table `teams`
+--
+ALTER TABLE `teams`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `userbankdeatils`
@@ -590,13 +758,13 @@ ALTER TABLE `userupidetails`
 -- AUTO_INCREMENT for table `user_details`
 --
 ALTER TABLE `user_details`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT for table `wallet`
 --
 ALTER TABLE `wallet`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `withdrawal`
@@ -620,6 +788,20 @@ ALTER TABLE `assign_module`
 --
 ALTER TABLE `deposit`
   ADD CONSTRAINT `paymethod_id` FOREIGN KEY (`paymethod_id`) REFERENCES `payment_details` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `match`
+--
+ALTER TABLE `match`
+  ADD CONSTRAINT `series_id` FOREIGN KEY (`series_id`) REFERENCES `series` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `team_one` FOREIGN KEY (`team1_id`) REFERENCES `teams` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  ADD CONSTRAINT `team_two` FOREIGN KEY (`team2_id`) REFERENCES `teams` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+--
+-- Constraints for table `match_prediction`
+--
+ALTER TABLE `match_prediction`
+  ADD CONSTRAINT `match_match` FOREIGN KEY (`match_id`) REFERENCES `match` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT;
 
 --
 -- Constraints for table `payment_details`

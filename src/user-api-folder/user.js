@@ -75,7 +75,6 @@ app.post("/register", (req, res) => {
   );
 });
 app.post("/login", (req, res) => {
-  console.log("");
   con.query(
     "select * from user_details where user_name=?",
     [req.body.mobile],
@@ -96,6 +95,7 @@ app.post("/login", (req, res) => {
               status: true,
               balance: balance[0].wallet_balance,
               username: result[0].user_name,
+              referral_id: result[0].referral_id,
               token,
             });
           }
@@ -106,19 +106,16 @@ app.post("/login", (req, res) => {
           process.env.SECRET_KEY_USER, { expiresIn: '365d' },
         );
         con.query(
-          "INSERT INTO `user_details`(`name`,`user_name`) VALUES (?,?)",
-          [req.body.name,req.body.mobile],
+          "call Register(?,?)",
+          [req.body.mobile, req.body.name],
           (err, result) => {
             if (err) throw err;
             if (result) {
-              con.query(
-                "INSERT INTO `wallet`(`user_name`, `wallet_balance`) VALUES (?,?)",
-                [req.body.mobile, 0]
-              );
               res.status(200).json({
                 error: false,
                 status: true,
                 balance: 0,
+                referral_id: result[0][0].referral_id,
                 username: req.body.mobile,
                 token,
               });
@@ -803,7 +800,7 @@ app.post("/get-match", verifytoken, (req, res) => {
   });
 });
 app.post("/get-match-prediction", verifytoken, (req, res) => {
-  con.query("SELECT (SELECT `team_name` FROM `teams` WHERE `id` = m.team1_id) as team1_name,(SELECT `short_name` FROM `teams` WHERE `id` = m.team1_id) as team1_sname,(SELECT `team_name` FROM `teams` WHERE `id` = m.team2_id) as team2_name,(SELECT `short_name` FROM `teams` WHERE `id` = m.team2_id) as team2_sname,(SELECT `series_name` FROM `series` WHERE `id` = m.series_id) as series_name,mp.pre_question,mp.pre_answer,mp.status,m.match_date FROM `match_prediction` as mp INNER join `match` as m on mp.match_id = m.id WHERE `match_id` = ?",[req.body.match_id], (err, result) => {
+  con.query("SELECT (SELECT `team_name` FROM `teams` WHERE `id` = m.team1_id) as team1_name,(SELECT `short_name` FROM `teams` WHERE `id` = m.team1_id) as team1_sname,(SELECT `team_name` FROM `teams` WHERE `id` = m.team2_id) as team2_name,(SELECT `short_name` FROM `teams` WHERE `id` = m.team2_id) as team2_sname,(SELECT `series_type` FROM `series` WHERE `id` = m.series_id) as series_type,(SELECT `series_name` FROM `series` WHERE `id` = m.series_id) as series_name,mp.pre_question,mp.pre_answer,mp.status,m.match_date FROM `match_prediction` as mp INNER join `match` as m on mp.match_id = m.id WHERE `match_id` = ?",[req.body.match_id], (err, result) => {
     if (err) throw err;
     else {
       res.status(200).send({ data: result });
