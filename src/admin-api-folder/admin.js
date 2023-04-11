@@ -1519,6 +1519,73 @@ app.post("/del-match", verifytoken, (req, res) => {
     }
   });
 });
+app.post("/get-match-by-id", verifytoken, (req, res) => {
+  con.query("SELECT m.id,t1.team_name as team1_name,t1.short_name as t1_sname,t2.team_name as team2_name,t2.short_name as t2_sname,s.series_name,m.team1_id,m.team2_id,m.series_id,m.result,m.status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id where `series_id` = ?",[req.body.id], (err, result) => {
+    if (err) throw err;
+    else {
+      res.status(200).send({ data: result });
+    }
+  });
+});
+
+app.post("/add-prediction", verifytoken, (req, res) => {
+  con.query(
+    "INSERT INTO `match_prediction`(`match_id`, `pre_question`, `pre_answer`) VALUES (?,?,?)",
+          [req.body.match_id, req.body.pre_question, req.body.pre_answer],
+    (err, result) => {
+      if (err) throw err;
+      if (result) {
+        res.status(200).send(true);
+      }
+    }
+  );
+ });
+app.post("/get-prediction", verifytoken, (req, res) => {
+  con.query("SELECT m.id,t1.team_name as team1_name,t2.team_name as team2_name,s.series_name,m.team1_id,m.team2_id,m.series_id,m.result,m.status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id", (err, result) => {
+    if (err) throw err;
+    else {
+      res.status(200).send({ data: result });
+    }
+  });
+});
+app.post("/status-prediction", verifytoken, (req, res) => {
+  con.query(
+    "UPDATE `match` SET `status`= ? WHERE `id`=?",
+    [req.body.status, req.body.id],
+    (err, result) => {
+      if (err) throw err;
+      else {
+        res.status(200).send(true);
+      }
+    }
+  );
+});
+app.post("/update-prediction", verifytoken, (req, res) => {
+  con.query(
+    "UPDATE `match` SET `team1_id`=?,`team2_id`=?,`series_id`=?,`match_date`=? WHERE `id` = ?",
+    [req.body.team_one, req.body.team_two, req.body.series_id, req.body.match_date, req.body.id],
+    (err, result) => {
+      if (err) {
+        if (err.code == "ER_DUP_ENTRY") {
+          const bearer = ((err.sqlMessage.split(" ")).pop().split(".")).pop().split("'");
+          if (bearer[0] == "series_name") {
+            res.status(403).send("Series name is already exist");
+          }
+        }
+      } if (result) {
+        res.status(200).send(true);
+      }
+    }
+  );
+});
+app.post("/del-prediction", verifytoken, (req, res) => {
+  con.query("DELETE FROM `match` where id=?", [req.body.id], (err, result) => {
+    if (err) throw err;
+    else {
+      res.status(200).send(true);
+    }
+  });
+});
 
 function verifytoken(req, res, next) {
   const bearerHeader = req.headers["authorization"];

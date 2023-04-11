@@ -75,6 +75,7 @@ app.post("/register", (req, res) => {
   );
 });
 app.post("/login", (req, res) => {
+  console.log("");
   con.query(
     "select * from user_details where user_name=?",
     [req.body.mobile],
@@ -794,7 +795,15 @@ app.post("/get-statement", verifytoken, (req, res) => {
   })
 });
 app.post("/get-match", verifytoken, (req, res) => {
-  con.query("SELECT m.id,t1.team_name as team1_name,t1.short_name,t2.team_name as team2_name,t2.short_name,s.series_name,m.team1_id,m.team2_id,m.series_id,m.result,m.status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id", (err, result) => {
+  con.query("SELECT m.id,t1.team_name as team1_name,t1.short_name as short1_name,t2.team_name as team2_name,t2.short_name  as short2_name,s.series_name,m.team1_id,m.team2_id,m.series_id,m.result,m.status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id", (err, result) => {
+    if (err) throw err;
+    else {
+      res.status(200).send({ data: result });
+    }
+  });
+});
+app.post("/get-match-prediction", verifytoken, (req, res) => {
+  con.query("SELECT (SELECT `team_name` FROM `teams` WHERE `id` = m.team1_id) as team1_name,(SELECT `short_name` FROM `teams` WHERE `id` = m.team1_id) as team1_sname,(SELECT `team_name` FROM `teams` WHERE `id` = m.team2_id) as team2_name,(SELECT `short_name` FROM `teams` WHERE `id` = m.team2_id) as team2_sname,(SELECT `series_name` FROM `series` WHERE `id` = m.series_id) as series_name,mp.pre_question,mp.pre_answer,mp.status,m.match_date FROM `match_prediction` as mp INNER join `match` as m on mp.match_id = m.id WHERE `match_id` = ?",[req.body.match_id], (err, result) => {
     if (err) throw err;
     else {
       res.status(200).send({ data: result });
