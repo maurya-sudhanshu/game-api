@@ -795,7 +795,7 @@ app.post("/get-match", verifytoken, (req, res) => {
   con.query("SELECT m.id,t1.team_name as team1_name,t1.short_name as short1_name,t2.team_name as team2_name,t2.short_name  as short2_name,s.series_name,m.team1_id,m.team2_id,m.series_id,m.result,m.status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id", (err, result) => {
     if (err) throw err;
     else {
-      res.status(200).send({ data: result });
+      res.status(200).send(result);
     }
   });
 });
@@ -811,10 +811,6 @@ app.post("/get-match-prediction", verifytoken, (req, res) => {
 app.post("/get-current-time", verifytoken, (req, res) => {
   res.send({ error: false, status: true, currentTime: new Date() });
 });
-
-// cron.schedule("*/1 * * * * *", () => {
-
-// });
 function verifytoken(req, res, next) {
   const bearerHeader = req.headers["authorization"];
   if (typeof bearerHeader !== "undefined") {
