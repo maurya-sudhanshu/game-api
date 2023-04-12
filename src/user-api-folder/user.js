@@ -803,7 +803,7 @@ app.post("/get-match-prediction", verifytoken, (req, res) => {
   con.query("SELECT (SELECT `team_name` FROM `teams` WHERE `id` = m.team1_id) as team1_name,(SELECT `short_name` FROM `teams` WHERE `id` = m.team1_id) as team1_sname,(SELECT `team_name` FROM `teams` WHERE `id` = m.team2_id) as team2_name,(SELECT `short_name` FROM `teams` WHERE `id` = m.team2_id) as team2_sname,(SELECT `series_type` FROM `series` WHERE `id` = m.series_id) as series_type,(SELECT `series_name` FROM `series` WHERE `id` = m.series_id) as series_name,mp.pre_question,mp.pre_answer,mp.status,m.match_date FROM `match_prediction` as mp INNER join `match` as m on mp.match_id = m.id WHERE `match_id` = ?",[req.body.match_id], (err, result) => {
     if (err) throw err;
     else {
-      res.status(200).send({ data: result });
+      res.status(200).send(result);
     }
   });
 });

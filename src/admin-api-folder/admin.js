@@ -1,5 +1,7 @@
 const express = require("express");
 const app = express.Router();
+var atob = require('atob');
+var btoa = require('btoa');
 const con = require("../db/conn");
 const multer = require("multer");
 var jwt = require("jsonwebtoken");
@@ -59,6 +61,8 @@ const upload = multer({ storage: storage });
 
 
 app.post("/login", (req, res) => {
+  var dec = atob(req.body.data);
+  req.body = JSON.parse(dec);
   con.query("select (select name from role where id = role_id) as role, (select play_btn from role where id = role_id) as playbtn from role_assign where user_id = (SELECT id FROM `login` where `username`=?);", [req.body.username], (role_err, role_result) => {
     if (role_err) throw role_err;
     if (role_result.length > 0) {
@@ -81,19 +85,19 @@ app.post("/login", (req, res) => {
                     if (err) throw err;
                     else
                       con.query("UPDATE `login` SET `device_logged_in`='Y' WHERE `username` = ?", [req.body.username])
-                    res.status(200).json({
+                    res.status(200).json(btoa(JSON.stringify({
                       status: true,
                       username: result[0].username,
                       play: role_result[0].playbtn,
                       token,
-                    });
+                    })));
                   }
                 );
               } else {
-                res.send("Username And Password is Wrong!");
+                res.status(401).send(btoa("Username And Password is Wrong!"));
               }
             } else {
-              res.send("Username is not exist");
+              res.status(401).send(btoa("Username is not exist"));
             }
           }
         );
@@ -116,29 +120,25 @@ app.post("/login", (req, res) => {
                     if (err) throw err;
                     else
                       con.query("UPDATE `login` SET `device_logged_in`='Y' WHERE `username` = ?", [req.body.username])
-                    res.status(200).json({
+                    res.status(200).json(btoa(JSON.stringify({
                       status: true,
                       username: result[0].username,
                       play: role_result[0].playbtn,
                       token,
-                    });
+                    })));
                   }
                 );
               } else {
-                res.send("Username And Password is Wrong!");
+                res.status(401).send(btoa("Username And Password is Wrong!"));
               }
             } else {
-              res.send("Username is not exist");
+              res.status(401).send(btoa("Username is not exist"));
             }
           }
         );
       }
     } else {
-      res.status(404).json({
-        error: true,
-        status: false,
-        massage: "This user is not assigned role"
-      })
+      res.status(401).send(btoa("Unknown Error"));
     }
   })
 });
@@ -172,43 +172,24 @@ app.post("/change", verifytoken, (req, res) => {
             (err, result) => {
               if (err) throw err;
               if (result) {
-                res.status(200).json({
+                res.status(200).json(btoa(JSON.stringify({
                   error: false,
                   status: true,
                   message: "Reset Password Successfully",
-                });
+                })));
               }
             }
           );
         } else {
-          res.status(200).json({
+          res.status(200).json(btoa(JSON.stringify({
             error: true,
             message: "Password is Wrong",
-          });
+          })));
         }
       }
     }
   );
 });
-app.get("/get-activity_maping", (req, res) => {
-  con.query("SELECT * FROM `activity_maping`", (error, result) => {
-    if (result) {
-      res.status(200).send(result);
-    } else {
-      res.sendStatus(403);
-    }
-  });
-});
-app.get("/get-map", (req, res) => {
-  var sql =
-    "SELECT module.module_name AS name from module  JOIN activity_maping ON module.id = activity_maping.show_manu";
-  con.query(sql, function (err, result) {
-    if (err) throw err;
-    res.send(result);
-  });
-});
-
-
 
 app.post("/add-admin", verifytoken, (req, res) => {
   const salt = bcrypt.genSaltSync(10);
@@ -219,14 +200,14 @@ app.post("/add-admin", verifytoken, (req, res) => {
       const arr = module;
       const f = arr.find(element => element.module_name == 'Sub-Admin');
       if (f == undefined) {
-        res.status(403).send({ error: true, status: false, massage: 'You are not Capable to Create Admin' });
+        res.status(403).json(btoa(JSON.stringify({ error: true, status: false, massage: 'You are not Capable to Create Admin' })));
       } else {
         con.query(
           "select * from login where username = ?",
           [req.body.nusername],
           (err, result) => {
             if (err) throw err;
-            if (result[0] == null) {
+            if (result.length == 0) {
               con.query(
                 "INSERT INTO `login`(`name`,`username`, `password`) VALUES (?,?,?)",
                 [req.body.name, req.body.nusername, hash],
@@ -238,8 +219,8 @@ app.post("/add-admin", verifytoken, (req, res) => {
                       [req.body.role, req.body.nusername],
                       (err, result) => {
                         if (err) throw err;
-                        else {
-                          res.status(200).send({ error: false, status: true, massage: 'New Admin Created Successfully' });
+                        if(result) {
+                          res.status(201).json(btoa(JSON.stringify({ error: false, status: true, massage: 'New Admin Created Successfully' })));
                         }
                       }
                     );
@@ -247,7 +228,7 @@ app.post("/add-admin", verifytoken, (req, res) => {
                 }
               );
             } else {
-              res.status(302).send("Username is already exist");
+              res.status(302).send(btoa("Username is already exist"));
             }
           }
         );
@@ -262,7 +243,7 @@ app.post("/update-admin", verifytoken, (req, res) => {
       const arr = module;
       const f = arr.find(element => element.module_name == 'Sub-Admin');
       if (f == undefined) {
-        res.status(403).send({ error: true, status: false, massage: 'You are not Capable to Create Admin' });
+        res.status(403).json(btoa(JSON.stringify({ error: true, status: false, massage: 'You are not Capable to Create Admin' })));
       } else {
         con.query("select `id` from `login` where `username` = ?", [req.body.nusername], (err, check) => {
           if (err) throw err;
@@ -277,14 +258,14 @@ app.post("/update-admin", verifytoken, (req, res) => {
                     con.query("UPDATE `role_assign` SET `role_id`=? WHERE `user_id` = ?", [req.body.role, req.body.id], (err, result) => {
                       if (err) throw err;
                       if (result) {
-                        res.status(200).send({ error: false, status: true, massage: 'Admin Details Updated Successfully' });
+                        res.status(200).json(btoa(JSON.stringify({ error: false, status: true, massage: 'Admin Details Updated Successfully' })));
                       }
                     })
                   }
                 }
               );
             } else {
-              res.status(302).send({ error: true, status: false, massage: 'Username is already Exist' })
+              res.status(302).json(btoa(JSON.stringify({ error: true, status: false, massage: 'Username is already Exist' })))
             }
           } else {
             con.query(
@@ -296,7 +277,7 @@ app.post("/update-admin", verifytoken, (req, res) => {
                   con.query("UPDATE `role_assign` SET `role_id`=? WHERE `user_id` = ?", [req.body.role, req.body.id], (err, result) => {
                     if (err) throw err;
                     if (result) {
-                      res.status(200).send({ error: false, status: true, massage: 'Admin Details Updated Successfully' });
+                      res.status(200).json(btoa(JSON.stringify({ error: false, status: true, massage: 'Admin Details Updated Successfully' })));
                     }
                   })
                 }
@@ -312,7 +293,7 @@ app.post("/get-admin", verifytoken, (req, res) => {
   con.query("SELECT l.id,l.name ,l.username, (IFNULL((select role.display_name FROM role WHERE role.id = ra.role_id),'Not Assign')) as role,l.date,l.device_logged_in,l.status  FROM `login` as l LEFT JOIN role_assign as ra on l.id = ra.user_id;", (err, result) => {
     if (err) throw err;
     if (result) {
-      res.status(200).send({ error: false, status: true, data: result });
+      res.status(200).json(btoa(JSON.stringify({ error: false, status: true, data: result })));
     }
   })
 })
@@ -323,14 +304,14 @@ app.post("/del-admin", verifytoken, (req, res) => {
       con.query("DELETE FROM `login` WHERE `id` = ?", [req.body.id], (err, result) => {
         if (err) throw err;
         if (result) {
-          res.status(200).send({ error: false, status: true, massage: 'Your Admin has been Deleted SuccessFully' })
+          res.status(200).json(btoa(JSON.stringify({ error: false, status: true, massage: 'Your Admin has been Deleted SuccessFully' })))
         }
       })
     } else {
       con.query("DELETE FROM `login` WHERE `id` = ?", [req.body.id], (err, result) => {
         if (err) throw err;
         if (result) {
-          res.status(200).send({ error: false, status: true, massage: 'Your Admin has been Deleted SuccessFully' })
+          res.status(200).send(btoa(JSON.stringify({ error: false, status: true, massage: 'Your Admin has been Deleted SuccessFully' })))
         }
       })
     }
@@ -349,13 +330,13 @@ app.post("/add-activity_maping", verifytoken, (req, res) => {
           [req.body.name, req.body.url, req.body.status, req.body.manu],
           (err, result) => {
             if (err) throw err;
-            else {
-              res.status(200).send(true);
+            if(result) {
+              res.status(200).json(btoa(true));
             }
           }
         );
       } else {
-        res.send("Display name is already exist");
+        res.status(302).json(btoa("Display name is already exist"));
       }
     }
   );
@@ -365,7 +346,7 @@ app.post("/get-user", verifytoken, (req, res) => {
   con.query("SELECT * FROM `user`", (err, result) => {
     if (err) throw err;
     else {
-      res.status(200).send({ data: result });
+      res.status(200).json({ data: result });
     }
   });
 });
@@ -394,11 +375,11 @@ app.post("/get-total-data", verifytoken, (req, res) => {
   con.query("SELECT (select IFNULL(COUNT(*), 0) from user_details) as total_user,(select IFNULL(COUNT(*), 0) from user_details WHERE device_logged_in = 'Y') as active_user,(SELECT IFNULL(SUM(balance), 0) FROM `withdrawal` WHERE status ='Success') as total_w,(SELECT IFNULL(COUNT(*),0) FROM `withdrawal` WHERE status = 'Pending') as total_wr,(SELECT IFNULL(SUM(balance), 0) FROM `deposit` WHERE status = 'Success') as total_d,(SELECT IFNULL(COUNT(*), 0) FROM `deposit` WHERE status = 'Pending') as total_dr;", (ro_err, ro_result) => {
     if (ro_err) throw ro_err;
     if (ro_result) {
-      res.status(200).json({
+      res.status(200).json(btoa(JSON.stringify({
         error: false,
         status: true,
         data: ro_result
-      })
+      })))
     }
   })
 });
@@ -410,15 +391,15 @@ app.post("/get-menu", verifytoken, (req, res) => {
       con.query("SELECT am.id,m.module_name,m.url,am.status,am.date FROM assign_module as am inner Join module as m on am.module = m.id where role = ? ORDER BY am.module ASC;", [role_result[0].role_id], (ro_err, ro_result) => {
         if (ro_err) throw ro_err;
         if (ro_result) {
-          res.status(200).json({
+          res.status(200).json(btoa(JSON.stringify({
             error: false,
             status: true,
             data: ro_result
-          })
+          })))
         }
       })
     } else {
-      res.status(404).json({
+      res.status(401).json({
         error: true,
         status: false,
         massage: "This user is not assigned role"
@@ -645,11 +626,7 @@ app.post("/get-pay-method", verifytoken, (req, res) => {
     }
   });
 });
-app.post(
-  "/add-payment-details-upi",
-  upload.single("qr_code"),
-  verifytoken,
-  (req, res) => {
+app.post("/add-payment-details-upi", upload.single("qr_code"), verifytoken, (req, res) => {
     var body = req.body;
     con.query(
       "select * from payment_details where UPI_id = ?",
@@ -1588,6 +1565,8 @@ app.post("/del-prediction", verifytoken, (req, res) => {
 });
 
 function verifytoken(req, res, next) {
+  var dec = atob(req.body.data);
+  req.body = JSON.parse(dec);
   const bearerHeader = req.headers["authorization"];
   if (typeof bearerHeader !== "undefined") {
     const bearer = bearerHeader.split(" ");
@@ -1603,16 +1582,15 @@ function verifytoken(req, res, next) {
               res.status(403).send('Token Expire');
             } else {
               if (auth.username != req.body.username) {
-                console.log(auth.username + "   " + req.body.username);
                 res.status(403).send("false");
               } else {
                 next();
               }
             }
           }
-        );
-      } else {
-        if (auth.username != req.body.username) {
+          );
+        } else {
+          if (auth.username != req.body.username) {
           res.status(403).send("false");
         } else {
           next();
