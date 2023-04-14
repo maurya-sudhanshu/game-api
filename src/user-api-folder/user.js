@@ -792,7 +792,7 @@ app.post("/get-statement", verifytoken, (req, res) => {
   })
 });
 app.post("/get-match", verifytoken, (req, res) => {
-  con.query("SELECT m.id,t1.team_name as team1_name,t1.short_name as short1_name,t2.team_name as team2_name,t2.short_name  as short2_name,s.series_name,m.status,(IF(DATEDIFF(m.match_date,CURDATE())=0, 'T',  IF(DATEDIFF(m.match_date,CURDATE())>0, 'U', 'P'))) as match_status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id", (err, result) => {
+  con.query("SELECT m.id,t1.team_name as team1_name,t1.short_name as short1_name,t1.icons as t1icon,t2.team_name as team2_name,t2.short_name  as short2_name,t2.icons as t2icon,s.icons as sicons,s.series_name,s.icons as sicons,m.status,(IF(DATEDIFF(m.match_date,CURDATE())=0, 'T',  IF(DATEDIFF(m.match_date,CURDATE())>0, 'U', 'P'))) as match_status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id", (err, result) => {
     if (err) throw err;
     else {
       res.status(200).send(result);

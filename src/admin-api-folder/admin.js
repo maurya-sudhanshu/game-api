@@ -22,6 +22,7 @@ app.use(
 );
 app.use("/image", express.static("image"));
 app.post("/del", (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   fs.unlinkSync('/image/QR-Code/qr_code-1680512428915-753544602.png', function (err) {
     if (err && err.code == 'ENOENT') {
       // file doens't exist
@@ -36,10 +37,12 @@ app.post("/del", (req, res) => {
 });
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-  if (file.fieldname == "qr_code") {
+    if (file.fieldname == "qr_code") {
       cb(null, "image/QR-Code");
+    } else if (file.fieldname == "teams") {
+      cb(null, "image/team");
     } else {
-      cb(null, "image/buisness");
+      cb(null, "image/series");
     }
   },
   filename: function (req, file, cb) {
@@ -51,8 +54,7 @@ const upload = multer({ storage: storage });
 
 
 app.post("/login", (req, res) => {
-  var dec = atob(req.body.data);
-  req.body = JSON.parse(dec);
+  req.body = JSON.parse(atob(req.body.data));
   con.query("select (select name from role where id = role_id) as role, (select play_btn from role where id = role_id) as playbtn from role_assign where user_id = (SELECT id FROM `login` where `username`=?);", [req.body.username], (role_err, role_result) => {
     if (role_err) throw role_err;
     if (role_result.length > 0) {
@@ -133,6 +135,7 @@ app.post("/login", (req, res) => {
   })
 });
 app.post("/logout", (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("UPDATE `login` SET `device_logged_in`='N' WHERE `username` = ?", [req.body.username], (err, result) => {
     if (err) { throw err; }
     if (result) {
@@ -141,6 +144,7 @@ app.post("/logout", (req, res) => {
   })
 });
 app.post("/change", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "select * from login where username=?",
     [req.body.username],
@@ -182,6 +186,7 @@ app.post("/change", verifytoken, (req, res) => {
 });
 
 app.post("/add-admin", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   const salt = bcrypt.genSaltSync(10);
   const hash = bcrypt.hashSync(req.body.password, salt);
   con.query("select m.module_name FROM assign_module as am INNER join module as m on am.module = m.id WHERE am.role = (select role_id from role_assign where user_id = (SELECT id FROM `login` where `username`=?))", [req.body.username], (err, module) => {
@@ -209,7 +214,7 @@ app.post("/add-admin", verifytoken, (req, res) => {
                       [req.body.role, req.body.nusername],
                       (err, result) => {
                         if (err) throw err;
-                        if(result) {
+                        if (result) {
                           res.status(201).json(btoa(JSON.stringify({ error: false, status: true, massage: 'New Admin Created Successfully' })));
                         }
                       }
@@ -227,6 +232,7 @@ app.post("/add-admin", verifytoken, (req, res) => {
   })
 });
 app.post("/update-admin", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("select m.module_name FROM assign_module as am INNER join module as m on am.module = m.id WHERE am.role = (select role_id from role_assign where user_id = (SELECT id FROM `login` where `username`=?))", [req.body.username], (err, module) => {
     if (err) throw err;
     if (module) {
@@ -280,6 +286,7 @@ app.post("/update-admin", verifytoken, (req, res) => {
   })
 });
 app.post("/get-admin", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("SELECT l.id,l.name ,l.username, (IFNULL((select role.display_name FROM role WHERE role.id = ra.role_id),'Not Assign')) as role,l.date,l.device_logged_in,l.status  FROM `login` as l LEFT JOIN role_assign as ra on l.id = ra.user_id;", (err, result) => {
     if (err) throw err;
     if (result) {
@@ -288,6 +295,7 @@ app.post("/get-admin", verifytoken, (req, res) => {
   })
 })
 app.post("/del-admin", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("DELETE FROM `role_assign` WHERE `user_id` = ?", [req.body.id], (err, result) => {
     if (err) throw err;
     if (result.length > 0) {
@@ -309,6 +317,7 @@ app.post("/del-admin", verifytoken, (req, res) => {
 })
 
 app.post("/add-activity-mapping", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "select * from activity_maping where activity_name=?",
     [req.body.name],
@@ -320,7 +329,7 @@ app.post("/add-activity-mapping", verifytoken, (req, res) => {
           [req.body.name, req.body.url, req.body.status, req.body.manu],
           (err, result) => {
             if (err) throw err;
-            if(result) {
+            if (result) {
               res.status(200).json(btoa(true));
             }
           }
@@ -333,6 +342,7 @@ app.post("/add-activity-mapping", verifytoken, (req, res) => {
 });
 
 app.post("/get-user", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("SELECT * FROM `user`", (err, result) => {
     if (err) throw err;
     else {
@@ -341,6 +351,7 @@ app.post("/get-user", verifytoken, (req, res) => {
   });
 });
 app.post("/del-user", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("DELETE FROM `user` WHERE `id` = ?", [req.body.id], (err, result) => {
     if (err) throw err;
     if (result) {
@@ -349,6 +360,7 @@ app.post("/del-user", verifytoken, (req, res) => {
   })
 })
 app.post("/status-user", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `user` SET `status`=? WHERE `id` = ?",
     [req.body.status, req.body.id],
@@ -362,6 +374,7 @@ app.post("/status-user", verifytoken, (req, res) => {
 });
 
 app.post("/get-total-data", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("SELECT (select IFNULL(COUNT(*), 0) from user_details) as total_user,(select IFNULL(COUNT(*), 0) from user_details WHERE device_logged_in = 'Y') as active_user,(SELECT IFNULL(SUM(balance), 0) FROM `withdrawal` WHERE status ='Success') as total_w,(SELECT IFNULL(COUNT(*),0) FROM `withdrawal` WHERE status = 'Pending') as total_wr,(SELECT IFNULL(SUM(balance), 0) FROM `deposit` WHERE status = 'Success') as total_d,(SELECT IFNULL(COUNT(*), 0) FROM `deposit` WHERE status = 'Pending') as total_dr;", (ro_err, ro_result) => {
     if (ro_err) throw ro_err;
     if (ro_result) {
@@ -375,6 +388,7 @@ app.post("/get-total-data", verifytoken, (req, res) => {
 });
 
 app.post("/get-menu", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("select role_id from role_assign where user_id = (SELECT id FROM `login` where `username`=?);", [req.body.username], (role_err, role_result) => {
     if (role_err) throw role_err;
     if (role_result.length > 0) {
@@ -399,6 +413,7 @@ app.post("/get-menu", verifytoken, (req, res) => {
 });
 
 app.post("/add-role", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "select * from role where display_name=?",
     [req.body.display_name],
@@ -425,12 +440,14 @@ app.post("/add-role", verifytoken, (req, res) => {
   );
 });
 app.post("/get-role", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("select * from role", (err, result) => {
     if (err) throw err;
     res.status(200).json(btoa(JSON.stringify({ data: result })));
   });
 });
 app.post("/del-role", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("DELETE FROM `assign_module` WHERE `role` = ?", [req.body.id], (err, result) => {
     if (err) throw err;
     if (result.length > 0) {
@@ -451,6 +468,7 @@ app.post("/del-role", verifytoken, (req, res) => {
   })
 })
 app.post("/status-role", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `role` SET `status`= ? WHERE `id`=?",
     [req.body.status, req.body.id],
@@ -463,18 +481,21 @@ app.post("/status-role", verifytoken, (req, res) => {
   );
 })
 app.post("/update-role", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("UPDATE `role` SET `name`=?,`display_name`=?,`view`=?,`delete_d`=?,`update_d`=?,`play_btn`=? WHERE `id`=?", [req.body.name, req.body.dname, (req.body.view_d).toString(), (req.body.delete_d).toString(), (req.body.update_d).toString(), (req.body.play_d).toString(), req.body.id], (err, result) => {
     if (err) throw err;
     res.status(200).json(btoa(JSON.stringify({ error: false, status: true })));
   });
 });
 app.post("/get-role-not-assign", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("select * from role where role_assign = 'N'", (err, result) => {
     if (err) throw err;
     res.status(200).json(btoa(JSON.stringify({ data: result })));
   });
 });
 app.post("/get-role-assign", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("select * from role where role_assign = 'Y'", (err, result) => {
     if (err) throw err;
     res.status(200).json(btoa(JSON.stringify({ data: result })));
@@ -482,6 +503,7 @@ app.post("/get-role-assign", verifytoken, (req, res) => {
 });
 
 app.post("/add-module", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   console.log(req.body);
   con.query(
     "select * from module where module_name=?",
@@ -506,6 +528,7 @@ app.post("/add-module", verifytoken, (req, res) => {
   );
 });
 app.post("/get-module", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("select * from `module`", (err, result) => {
     if (err) throw err;
     else {
@@ -514,6 +537,7 @@ app.post("/get-module", verifytoken, (req, res) => {
   });
 });
 app.post("/status-module", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `module` SET `status`= ? WHERE `id`=?",
     [req.body.status, req.body.id],
@@ -526,6 +550,7 @@ app.post("/status-module", verifytoken, (req, res) => {
   );
 });
 app.post("/get-module-id", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "select * from `module` where id=?",
     [req.body.id],
@@ -538,6 +563,7 @@ app.post("/get-module-id", verifytoken, (req, res) => {
   );
 });
 app.post("/update-module", (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `module` SET `module_name`=?,`url`=? WHERE `id`=?",
     [req.body.module_name, req.body.url, req.body.id],
@@ -553,6 +579,7 @@ app.post("/update-module", (req, res) => {
   );
 });
 app.post("/del-module", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("DELETE FROM `assign_module` WHERE `module`=?", [req.body.id], (error, resultt) => {
     if (error) {
       throw error;
@@ -569,6 +596,7 @@ app.post("/del-module", verifytoken, (req, res) => {
 });
 
 app.post("/assign-module", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   for (var module of req.body.module) {
     con.query("INSERT INTO `assign_module`(`role`, `module`) VALUES (?,?)", [req.body.role_id, module])
   }
@@ -584,12 +612,13 @@ app.post("/assign-module", verifytoken, (req, res) => {
   })
 });
 app.post("/del-assign-module", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("DELETE FROM `assign_module` WHERE `role`=?", [req.body.id], (err, result) => {
     if (err) throw err;
-    if(result) {
+    if (result) {
       con.query("UPDATE `role` SET `role_assign`='N' WHERE `id`=?", [req.body.id], (err, result) => {
         if (err) throw err;
-        if(result) {
+        if (result) {
           res.status(200).json(btoa(true));
         }
       });
@@ -597,6 +626,7 @@ app.post("/del-assign-module", verifytoken, (req, res) => {
   });
 });
 app.post("/get-assign-module", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query('SELECT am.id,rm.role,m.module_name,r.display_name FROM `assign_module` am INNER join module m on am.module = m.id INNER JOIN role r on am.role = r.id WHERE am.role = ?', [req.body.id], (err, result) => {
     if (err) throw err;
     if (result) {
@@ -609,6 +639,7 @@ app.post("/get-assign-module", verifytoken, (req, res) => {
   })
 });
 app.post("/update-assign-module", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("DELETE FROM `assign_module` WHERE `role` = ?", [req.body.role_id], (error, resultt) => {
     if (error) {
       throw error;
@@ -627,6 +658,7 @@ app.post("/update-assign-module", verifytoken, (req, res) => {
 
 });
 app.post("/get-assign-module-id", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query('SELECT am.module FROM `assign_module` am INNER join module m on am.module = m.id INNER JOIN role r on am.role = r.id WHERE am.role = ?', [req.body.id], (err, result) => {
     if (err) throw err;
     if (result) {
@@ -640,6 +672,7 @@ app.post("/get-assign-module-id", verifytoken, (req, res) => {
 });
 
 app.post("/get-pay-method", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("select * from payment_method", (err, result) => {
     if (err) throw err;
     if (result) {
@@ -652,89 +685,91 @@ app.post("/get-pay-method", verifytoken, (req, res) => {
   });
 });
 app.post("/add-payment-details-upi", upload.single("qr_code"), verifytoken, (req, res) => {
-    var body = req.body;
-    con.query(
-      "select * from payment_details where UPI_id = ?",
-      [body.upi_id],
-      (err, result) => {
-        if (err) throw err;
-        if (result.length > 0) {
-          res.status(302).json(btoa(JSON.stringify({
-            error: true,
-            status: false,
-            massage: "UPI Id is Already exist",
-          })));
+  req.body = JSON.parse(atob(req.body.data));
+  var body = req.body;
+  con.query(
+    "select * from payment_details where UPI_id = ?",
+    [body.upi_id],
+    (err, result) => {
+      if (err) throw err;
+      if (result.length > 0) {
+        res.status(302).json(btoa(JSON.stringify({
+          error: true,
+          status: false,
+          massage: "UPI Id is Already exist",
+        })));
+      } else {
+        if (req.body.payment_method === "Google Pay") {
+          con.query(
+            "INSERT INTO `payment_details`(`paymethod_id`, `name`, `UPI_id`, `QR_code`, `icons`) VALUES (?,?,?,?,?)",
+            [
+              body.payment_method,
+              body.name,
+              body.upi_id,
+              req.file.filename,
+              "googlepay.png",
+            ],
+            (err, result) => {
+              if (err) throw err;
+              if (result) {
+                res.status(200).json(btoa(JSON.stringify({
+                  error: false,
+                  status: true,
+                  massage: "Insert Google Pay Details SuccessFully",
+                })));
+              }
+            }
+          );
+        } else if (req.body.payment_method === "Phone Pe") {
+          con.query(
+            "INSERT INTO `payment_details`(`paymethod_id`, `name`, `UPI_id`, `QR_code`, `icons`) VALUES (?,?,?,?,?)",
+            [
+              body.payment_method,
+              body.name,
+              body.upi_id,
+              req.file.filename,
+              "phonepe.png",
+            ],
+            (err, result) => {
+              if (err) throw err;
+              if (result) {
+                res.status(200).json(btoa(JSON.stringify({
+                  error: false,
+                  status: true,
+                  massage: "Insert Phone pe Details SuccessFully",
+                })));
+              }
+            }
+          );
         } else {
-          if (req.body.payment_method === "Google Pay") {
-            con.query(
-              "INSERT INTO `payment_details`(`paymethod_id`, `name`, `UPI_id`, `QR_code`, `icons`) VALUES (?,?,?,?,?)",
-              [
-                body.payment_method,
-                body.name,
-                body.upi_id,
-                req.file.filename,
-                "googlepay.png",
-              ],
-              (err, result) => {
-                if (err) throw err;
-                if (result) {
-                  res.status(200).json(btoa(JSON.stringify({
-                    error: false,
-                    status: true,
-                    massage: "Insert Google Pay Details SuccessFully",
-                  })));
-                }
+          con.query(
+            "INSERT INTO `payment_details`(`paymethod_id`, `name`, `UPI_id`, `QR_code`, `icons`) VALUES (?,?,?,?,?)",
+            [
+              body.payment_method,
+              body.name,
+              body.upi_id,
+              req.file.filename,
+              "paytm.png",
+            ],
+            (err, result) => {
+              if (err) throw err;
+              if (result) {
+                res.status(200).json(btoa(JSON.stringify({
+                  error: false,
+                  status: true,
+                  massage: "Insert Paytm Details SuccessFully",
+                })));
               }
-            );
-          } else if (req.body.payment_method === "Phone Pe") {
-            con.query(
-              "INSERT INTO `payment_details`(`paymethod_id`, `name`, `UPI_id`, `QR_code`, `icons`) VALUES (?,?,?,?,?)",
-              [
-                body.payment_method,
-                body.name,
-                body.upi_id,
-                req.file.filename,
-                "phonepe.png",
-              ],
-              (err, result) => {
-                if (err) throw err;
-                if (result) {
-                  res.status(200).json(btoa(JSON.stringify({
-                    error: false,
-                    status: true,
-                    massage: "Insert Phone pe Details SuccessFully",
-                  })));
-                }
-              }
-            );
-          } else {
-            con.query(
-              "INSERT INTO `payment_details`(`paymethod_id`, `name`, `UPI_id`, `QR_code`, `icons`) VALUES (?,?,?,?,?)",
-              [
-                body.payment_method,
-                body.name,
-                body.upi_id,
-                req.file.filename,
-                "paytm.png",
-              ],
-              (err, result) => {
-                if (err) throw err;
-                if (result) {
-                  res.status(200).json(btoa(JSON.stringify({
-                    error: false,
-                    status: true,
-                    massage: "Insert Paytm Details SuccessFully",
-                  })));
-                }
-              }
-            );
-          }
+            }
+          );
         }
       }
-    );
-  }
+    }
+  );
+}
 );
 app.post("/add-payment-details-bank", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   var body = req.body;
   con.query(
     "select * from payment_details where account_no = ?",
@@ -774,6 +809,7 @@ app.post("/add-payment-details-bank", verifytoken, (req, res) => {
   );
 });
 app.post("/get-payment-details", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "select pd.id,pm.id as pm_id,pm.name as payment_method,pd.name,pd.UPI_id,pd.QR_code,pd.bank_name,pd.account_no,pd.ifsc_code,pd.account_type,pm.icon,pd.status from payment_details as pd inner Join payment_method as pm on pd.paymethod_id = pm.id where pm.name = ?;",
     [req.body.method],
@@ -786,6 +822,7 @@ app.post("/get-payment-details", verifytoken, (req, res) => {
   );
 });
 app.post("/status-payment-details", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "select id from payment_details  where status = 'Y' and paymethod_id = ?",
     [req.body.method],
@@ -835,6 +872,7 @@ app.post("/status-payment-details", verifytoken, (req, res) => {
   );
 });
 app.post("/del-payment-details", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "DELETE FROM `payment_details` where id=?",
     [req.body.id],
@@ -861,6 +899,7 @@ app.post("/del-payment-details", verifytoken, (req, res) => {
   );
 });
 app.post("/update-payment-details", upload.single("qr_code"), verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `payment_details` SET `name`=?,`UPI_id`=?,`QR_code`=? WHERE `id`=?",
     [req.body.name, req.body.upi_id, req.file.filename, req.body.id],
@@ -881,6 +920,7 @@ app.post("/update-payment-details", upload.single("qr_code"), verifytoken, (req,
   );
 });
 app.post("/update-bank-payment-details", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   var body = req.body;
   con.query("select id from `payment_details` where  `account_no` = ?", [body.account_no], (errror, ressult) => {
     if (errror) throw errror;
@@ -901,7 +941,7 @@ app.post("/update-bank-payment-details", verifytoken, (req, res) => {
               throw err;
             }
             if (result) {
-              res.status(200).json(btoa(JSON.stringify({error: false, status: true, massage: "Details Updated SuccessFully" })));
+              res.status(200).json(btoa(JSON.stringify({ error: false, status: true, massage: "Details Updated SuccessFully" })));
             }
           }
         );
@@ -934,6 +974,7 @@ app.post("/update-bank-payment-details", verifytoken, (req, res) => {
 });
 
 app.post("/get-user-details", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "SELECT * FROM `user_details`;",
     [req.body.method],
@@ -950,6 +991,7 @@ app.post("/get-user-details", verifytoken, (req, res) => {
   );
 });
 app.post("/status-user-details", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `user_details` SET `status`=? WHERE `id`= ?",
     [req.body.status, req.body.id],
@@ -966,6 +1008,7 @@ app.post("/status-user-details", verifytoken, (req, res) => {
   );
 });
 app.post("/del-user-details", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "DELETE FROM `user_details` where id=?",
     [req.body.id],
@@ -991,6 +1034,7 @@ app.post("/del-user-details", verifytoken, (req, res) => {
   );
 });
 app.post("/update-user-details", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `payment_details` SET `name`=?,`UPI_id`=?,`QR_code`=? WHERE `id`=?",
     [req.body.name, req.body.upi_id, req.file.filename, req.body.id],
@@ -1012,6 +1056,7 @@ app.post("/update-user-details", verifytoken, (req, res) => {
 });
 
 app.post("/get-deposit-request", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   if (req.body.status === "Pending") {
     con.query(
       "SELECT cd.id,cd.user_name,cd.image,cd.transaction_id,cd.reason,cd.payment,cd.balance,cd.status,cd.Approved_declined_By,cp.name as holder_name,cp.account_no,cp.account_type,cp.bank_name,cp.ifsc_code,cp.UPI_id,cd.date FROM `deposit` as cd inner join payment_details as cp on cd.paymethod_id = cp.id WHERE cd.`status` = 'Pending';",
@@ -1071,6 +1116,7 @@ app.post("/get-deposit-request", verifytoken, (req, res) => {
   }
 });
 app.post("/approve-deposit-request", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `deposit` SET `status`='Success',`Approved_declined_By`=? WHERE `id` = ?",
     [req.body.username, req.body.id],
@@ -1104,6 +1150,7 @@ app.post("/approve-deposit-request", verifytoken, (req, res) => {
   );
 });
 app.post("/decline-deposit-request", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `deposit` SET `status`=?,`reason`=?,`Approved_declined_By`=? WHERE `id` = ?",
     ["Canceled", req.body.reason, req.body.username, req.body.id],
@@ -1121,6 +1168,7 @@ app.post("/decline-deposit-request", verifytoken, (req, res) => {
 });
 
 app.post("/get-bank-details", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   if (req.body.status === "Pending") {
     con.query(
       "SELECT * FROM `userbankdeatils` where `status`=?",
@@ -1164,6 +1212,7 @@ app.post("/get-bank-details", verifytoken, (req, res) => {
   }
 });
 app.post("/approve-bank-details", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `userbankdeatils` SET `status`='Success',`approved_or_denied_by`=? WHERE `id` = ?",
     [req.body.username, req.body.id],
@@ -1180,6 +1229,7 @@ app.post("/approve-bank-details", verifytoken, (req, res) => {
   );
 });
 app.post("/decline-bank-details", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `userbankdeatils` SET `status`=?,`reason`=?,`approved_or_denied_by`=? WHERE `id` = ?",
     ["Canceled", req.body.reason, req.body.username, req.body.id],
@@ -1197,6 +1247,7 @@ app.post("/decline-bank-details", verifytoken, (req, res) => {
 });
 
 app.post("/get-withdrawal-request", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   if (req.body.status === "Pending") {
     con.query(
       "SELECT w.id,w.user_name,w.balance,w.reason,w.Approved_declined_By,b.account_no,b.account_holder_name,b.account_type,b.bankname,b.ifsc_code,upi.name as upiname,upi.UPI_id,num.name,num.number,w.paytype,W.status,w.date  FROM withdrawal as w left JOIN userbankdeatils as b ON CASE WHEN w.paytype = 'Bank Transfer' THEN w.paymethod_id = b.id ELSE NULL END left JOIN userupidetails as upi ON CASE WHEN w.paytype = 'UPI Id' THEN w.paymethod_id = upi.id ELSE NULL END left JOIN usernumberdetails as num ON CASE WHEN w.paytype = 'Number' THEN w.paymethod_id = num.id ELSE NULL END where w.status='Pending'",
@@ -1240,6 +1291,7 @@ app.post("/get-withdrawal-request", verifytoken, (req, res) => {
   }
 });
 app.post("/approve-withdrawal-request", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `withdrawal` SET `Approved_declined_By`=?,`status`='Success' WHERE `id`=? AND `user_name`=?",
     [req.body.username, req.body.id, req.body.mobile],
@@ -1263,6 +1315,7 @@ app.post("/approve-withdrawal-request", verifytoken, (req, res) => {
   );
 });
 app.post("/decline-withdrawal-request", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `withdrawal` SET `reason`=?,`Approved_declined_By`=?,`status`='Canceled' WHERE `id`=?",
     [req.body.reason, req.body.username, req.body.id],
@@ -1288,7 +1341,7 @@ app.post("/decline-withdrawal-request", verifytoken, (req, res) => {
   );
 });
 
-app.post("/add-team", verifytoken, (req, res) => {
+app.post("/add-team", upload.single("teams"), verifytoken, (req, res) => {
   con.query(
     "SELECT * FROM `teams` WHERE `team_name` = ?",
     [req.body.team_name],
@@ -1302,11 +1355,11 @@ app.post("/add-team", verifytoken, (req, res) => {
             if (errt) throw errt;
             if (resultt.length == 0) {
               con.query(
-                "INSERT INTO `teams`(`team_name`, `short_name`) VALUES (?,?)",
-                [req.body.team_name, req.body.short_name],
+                "INSERT INTO `teams`(`icons`,`team_name`, `short_name`) VALUES (?,?,?)",
+                [req.file.filename,req.body.team_name, req.body.short_name],
                 (err, result) => {
                   if (err) throw err;
-                  if(result) {
+                  if (result) {
                     res.status(200).json(btoa(true));
                   }
                 }
@@ -1323,6 +1376,7 @@ app.post("/add-team", verifytoken, (req, res) => {
   );
 });
 app.post("/get-team", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("select * from `teams`", (err, result) => {
     if (err) throw err;
     else {
@@ -1331,6 +1385,7 @@ app.post("/get-team", verifytoken, (req, res) => {
   });
 });
 app.post("/status-team", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `teams` SET `status`= ? WHERE `id`=?",
     [req.body.status, req.body.id],
@@ -1343,6 +1398,7 @@ app.post("/status-team", verifytoken, (req, res) => {
   );
 });
 app.post("/update-team", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `teams` SET `team_name`=?,`short_name`=? WHERE `id`=?",
     [req.body.team_name, req.body.short_name, req.body.id],
@@ -1364,6 +1420,7 @@ app.post("/update-team", verifytoken, (req, res) => {
   );
 });
 app.post("/del-team", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("DELETE FROM `teams` where id=?", [req.body.id], (err, result) => {
     if (err) throw err;
     else {
@@ -1372,7 +1429,7 @@ app.post("/del-team", verifytoken, (req, res) => {
   });
 });
 
-app.post("/add-series", verifytoken, (req, res) => {
+app.post("/add-series", upload.single("series"), verifytoken, (req, res) => {
   con.query(
     "SELECT * FROM `series` WHERE `series_name` = ?",
     [req.body.series_name],
@@ -1380,8 +1437,8 @@ app.post("/add-series", verifytoken, (req, res) => {
       if (err) throw err;
       if (result.length == 0) {
         con.query(
-          "INSERT INTO `series`(`series_name`, `series_type`) VALUES (?,?)",
-          [req.body.series_name, req.body.series_type],
+          "INSERT INTO `series`(`icons`,`series_name`, `series_type`) VALUES (?,?,?)",
+          [req.file.filename, req.body.series_name, req.body.series_type],
           (err, result) => {
             if (err) throw err;
             if (result) {
@@ -1396,6 +1453,7 @@ app.post("/add-series", verifytoken, (req, res) => {
   );
 });
 app.post("/get-series", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("select * from `series`", (err, result) => {
     if (err) throw err;
     else {
@@ -1404,6 +1462,7 @@ app.post("/get-series", verifytoken, (req, res) => {
   });
 });
 app.post("/status-series", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `series` SET `status`= ? WHERE `id`=?",
     [req.body.status, req.body.id],
@@ -1416,6 +1475,7 @@ app.post("/status-series", verifytoken, (req, res) => {
   );
 });
 app.post("/update-series", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `series` SET `series_name`=?,`series_type`=? WHERE `id`=?",
     [req.body.series_name, req.body.series_type, req.body.id],
@@ -1427,13 +1487,14 @@ app.post("/update-series", verifytoken, (req, res) => {
             res.status(403).json(btoa("Series name is already exist"));
           }
         }
-      } if(result) {
+      } if (result) {
         res.status(200).json(btoa(true));
       }
     }
   );
 });
 app.post("/del-series", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("DELETE FROM `series` where id=?", [req.body.id], (err, result) => {
     if (err) throw err;
     else {
@@ -1443,6 +1504,7 @@ app.post("/del-series", verifytoken, (req, res) => {
 });
 
 app.post("/add-match", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "INSERT INTO `match`( `team1_id`, `team2_id`, `series_id`, `match_date`) VALUES (?,?,?,?)",
     [req.body.team_one, req.body.team_two, req.body.series_id, req.body.match_date],
@@ -1455,6 +1517,7 @@ app.post("/add-match", verifytoken, (req, res) => {
   );
 });
 app.post("/get-match", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("SELECT m.id,t1.team_name as team1_name,t2.team_name as team2_name,s.series_name,m.team1_id,m.team2_id,m.series_id,m.result,m.status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id", (err, result) => {
     if (err) throw err;
     else {
@@ -1463,6 +1526,7 @@ app.post("/get-match", verifytoken, (req, res) => {
   });
 });
 app.post("/status-match", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `match` SET `status`= ? WHERE `id`=?",
     [req.body.status, req.body.id],
@@ -1475,9 +1539,10 @@ app.post("/status-match", verifytoken, (req, res) => {
   );
 });
 app.post("/update-match", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `match` SET `team1_id`=?,`team2_id`=?,`series_id`=?,`match_date`=? WHERE `id` = ?",
-    [req.body.team_one, req.body.team_two, req.body.series_id, req.body.match_date,req.body.id],
+    [req.body.team_one, req.body.team_two, req.body.series_id, req.body.match_date, req.body.id],
     (err, result) => {
       if (err) {
         if (err.code == "ER_DUP_ENTRY") {
@@ -1486,13 +1551,14 @@ app.post("/update-match", verifytoken, (req, res) => {
             res.status(403).json(btoa("Series name is already exist"));
           }
         }
-      } if(result) {
+      } if (result) {
         res.status(200).json(btoa(true));
       }
     }
   );
 });
 app.post("/del-match", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("DELETE FROM `match` where id=?", [req.body.id], (err, result) => {
     if (err) throw err;
     else {
@@ -1501,7 +1567,8 @@ app.post("/del-match", verifytoken, (req, res) => {
   });
 });
 app.post("/get-match-by-id", verifytoken, (req, res) => {
-  con.query("SELECT m.id,t1.team_name as team1_name,t1.short_name as t1_sname,t2.team_name as team2_name,t2.short_name as t2_sname,s.series_name,m.team1_id,m.team2_id,m.series_id,m.result,m.status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id where `series_id` = ?",[req.body.id], (err, result) => {
+  req.body = JSON.parse(atob(req.body.data));
+  con.query("SELECT m.id,t1.team_name as team1_name,t1.short_name as t1_sname,t2.team_name as team2_name,t2.short_name as t2_sname,s.series_name,m.team1_id,m.team2_id,m.series_id,m.result,m.status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id where `series_id` = ?", [req.body.id], (err, result) => {
     if (err) throw err;
     else {
       res.status(200).json(btoa(JSON.stringify({ data: result })));
@@ -1510,9 +1577,10 @@ app.post("/get-match-by-id", verifytoken, (req, res) => {
 });
 
 app.post("/add-prediction", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "INSERT INTO `match_prediction`(`match_id`, `pre_question`, `pre_answer`) VALUES (?,?,?)",
-          [req.body.match_id, req.body.pre_question, req.body.pre_answer],
+    [req.body.match_id, req.body.pre_question, req.body.pre_answer],
     (err, result) => {
       if (err) throw err;
       if (result) {
@@ -1520,8 +1588,9 @@ app.post("/add-prediction", verifytoken, (req, res) => {
       }
     }
   );
- });
+});
 app.post("/get-prediction", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("SELECT (SELECT `team_name` FROM `teams` WHERE `id` = m.team1_id) as team1_name,(SELECT `short_name` FROM `teams` WHERE `id` = m.team1_id) as team1_sname,(SELECT `team_name` FROM `teams` WHERE `id` = m.team2_id) as team2_name,(SELECT `short_name` FROM `teams` WHERE `id` = m.team2_id) as team2_sname,(SELECT `series_type` FROM `series` WHERE `id` = m.series_id) as series_type,(SELECT `series_name` FROM `series` WHERE `id` = m.series_id) as series_name,mp.pre_question,mp.pre_answer,mp.status,m.match_date FROM `match_prediction` as mp INNER join `match` as m on mp.match_id = m.id", (err, result) => {
     if (err) throw err;
     else {
@@ -1530,6 +1599,7 @@ app.post("/get-prediction", verifytoken, (req, res) => {
   });
 });
 app.post("/status-prediction", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `match_prediction` SET `status`= ? WHERE `id`=?",
     [req.body.status, req.body.id],
@@ -1542,6 +1612,7 @@ app.post("/status-prediction", verifytoken, (req, res) => {
   );
 });
 app.post("/update-prediction", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query(
     "UPDATE `match` SET `team1_id`=?,`team2_id`=?,`series_id`=?,`match_date`=? WHERE `id` = ?",
     [req.body.team_one, req.body.team_two, req.body.series_id, req.body.match_date, req.body.id],
@@ -1560,6 +1631,7 @@ app.post("/update-prediction", verifytoken, (req, res) => {
   );
 });
 app.post("/del-prediction", verifytoken, (req, res) => {
+  req.body = JSON.parse(atob(req.body.data));
   con.query("DELETE FROM `match_prediction` where id=?", [req.body.id], (err, result) => {
     if (err) throw err;
     else {
@@ -1569,8 +1641,6 @@ app.post("/del-prediction", verifytoken, (req, res) => {
 });
 
 function verifytoken(req, res, next) {
-  var dec = atob(req.body.data);
-  req.body = JSON.parse(dec);
   const bearerHeader = req.headers["authorization"];
   if (typeof bearerHeader !== "undefined") {
     const bearer = bearerHeader.split(" ");
@@ -1585,19 +1655,37 @@ function verifytoken(req, res, next) {
             if (err) {
               res.status(403).send('Token Expire');
             } else {
-              if (auth.username != req.body.username) {
-                res.status(403).send("false");
-              } else {
-                next();
+              if ((req.body.username) != undefined){
+                if ( auth.username == req.body.username) {
+                  next();
+                } else {
+                  res.status(403).send("false");
+                } 
+              }
+              if ((req.body.data) != undefined){
+                if ((auth.username == JSON.parse(atob(req.body.data)).username)) {
+                  next();
+                } else {
+                  res.status(403).send("false");
+                } 
               }
             }
           }
           );
         } else {
-          if (auth.username != req.body.username) {
-          res.status(403).send("false");
-        } else {
-          next();
+        if ((req.body.username) != undefined) {
+          if (auth.username == req.body.username) {
+            next();
+          } else {
+            res.status(403).send("false");
+          }
+        }
+        if ((req.body.data) != undefined) {
+          if ((auth.username == JSON.parse(atob(req.body.data)).username)) {
+            next();
+          } else {
+            res.status(403).send("false");
+          }
         }
       }
     });
