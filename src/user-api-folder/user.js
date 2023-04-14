@@ -107,7 +107,7 @@ app.post("/login", (req, res) => {
         );
         con.query(
           "call Register(?,?,?)",
-          [req.body.mobile, req.body.name, req.body.refferby],
+          [req.body.mobile, req.body.name, ((req.body.refferby == undefined) ? ("") : (req.body.refferby))],
           (err, result) => {
             if (err) throw err;
             if (result) {
