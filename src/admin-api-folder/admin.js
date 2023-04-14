@@ -20,33 +20,23 @@ app.use(
     parameterLimit: 50000,
   })
 );
-app.use("../../image", express.static("image"));
-
-app.delete("/del", (req, res) => {
-  fs.unlink(
-    "/image/banners-details/add_banner-1664302399008-677052225.png",
-    function (err) {
-      if (err) {
-        console.error(err);
-      } else {
-        console.log("File has been Deleted");
-      }
+app.use("/image", express.static("image"));
+app.post("/del", (req, res) => {
+  fs.unlinkSync('/image/QR-Code/qr_code-1680512428915-753544602.png', function (err) {
+    if (err && err.code == 'ENOENT') {
+      // file doens't exist
+      console.info("File doesn't exist, won't remove it.");
+    } else if (err) {
+      // other errors, e.g. maybe we don't have enough permission
+      console.error("Error occurred while trying to remove file");
+    } else {
+      console.info(`removed`);
     }
-  );
+  });
 });
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    if (file.fieldname == "add_banner") {
-      cb(null, "image/banners-details");
-    } else if (file.fieldname == "add_cat") {
-      cb(null, "image/catagory");
-    } else if (file.fieldname == "add_sub_cat") {
-      cb(null, "image/sub-catagory");
-    } else if (file.fieldname == "add_slug") {
-      cb(null, "image/slug");
-    } else if (file.fieldname == "Add_plan_img") {
-      cb(null, "image/plan");
-    } else if (file.fieldname == "qr_code") {
+  if (file.fieldname == "qr_code") {
       cb(null, "image/QR-Code");
     } else {
       cb(null, "image/buisness");
@@ -94,10 +84,10 @@ app.post("/login", (req, res) => {
                   }
                 );
               } else {
-                res.status(401).send(btoa("Username And Password is Wrong!"));
+                res.status(401).json(btoa("Username And Password is Wrong!"));
               }
             } else {
-              res.status(401).send(btoa("Username is not exist"));
+              res.status(401).json(btoa("Username is not exist"));
             }
           }
         );
@@ -129,16 +119,16 @@ app.post("/login", (req, res) => {
                   }
                 );
               } else {
-                res.status(401).send(btoa("Username And Password is Wrong!"));
+                res.status(401).json(btoa("Username And Password is Wrong!"));
               }
             } else {
-              res.status(401).send(btoa("Username is not exist"));
+              res.status(401).josn(btoa("Username is not exist"));
             }
           }
         );
       }
     } else {
-      res.status(401).send(btoa("Unknown Error"));
+      res.status(401).json(btoa("Unknown Error"));
     }
   })
 });
@@ -146,7 +136,7 @@ app.post("/logout", (req, res) => {
   con.query("UPDATE `login` SET `device_logged_in`='N' WHERE `username` = ?", [req.body.username], (err, result) => {
     if (err) { throw err; }
     if (result) {
-      res.status(200).send({ error: false, status: true })
+      res.status(200).json(btoa(JSON.stringify({ error: false, status: true })))
     }
   })
 });
@@ -228,7 +218,7 @@ app.post("/add-admin", verifytoken, (req, res) => {
                 }
               );
             } else {
-              res.status(302).send(btoa("Username is already exist"));
+              res.status(302).json(btoa("Username is already exist"));
             }
           }
         );
@@ -311,14 +301,14 @@ app.post("/del-admin", verifytoken, (req, res) => {
       con.query("DELETE FROM `login` WHERE `id` = ?", [req.body.id], (err, result) => {
         if (err) throw err;
         if (result) {
-          res.status(200).send(btoa(JSON.stringify({ error: false, status: true, massage: 'Your Admin has been Deleted SuccessFully' })))
+          res.status(200).json(btoa(JSON.stringify({ error: false, status: true, massage: 'Your Admin has been Deleted SuccessFully' })))
         }
       })
     }
   })
 })
 
-app.post("/add-activity_maping", verifytoken, (req, res) => {
+app.post("/add-activity-mapping", verifytoken, (req, res) => {
   con.query(
     "select * from activity_maping where activity_name=?",
     [req.body.name],
@@ -346,7 +336,7 @@ app.post("/get-user", verifytoken, (req, res) => {
   con.query("SELECT * FROM `user`", (err, result) => {
     if (err) throw err;
     else {
-      res.status(200).json({ data: result });
+      res.status(200).json(btoa(JSON.stringify({ data: result })));
     }
   });
 });
@@ -354,7 +344,7 @@ app.post("/del-user", verifytoken, (req, res) => {
   con.query("DELETE FROM `user` WHERE `id` = ?", [req.body.id], (err, result) => {
     if (err) throw err;
     if (result) {
-      res.status(200).send({ error: false, status: true, massage: 'Your User has been Deleted SuccessFully' })
+      res.status(200).json(btoa(JSON.stringify({ error: false, status: true, massage: 'Your User has been Deleted SuccessFully' })))
     }
   })
 })
@@ -365,7 +355,7 @@ app.post("/status-user", verifytoken, (req, res) => {
     (err, result) => {
       if (err) throw err;
       else {
-        res.status(200).send(true);
+        res.status(200).json(btoa(true));
       }
     }
   );
@@ -399,11 +389,11 @@ app.post("/get-menu", verifytoken, (req, res) => {
         }
       })
     } else {
-      res.status(401).json({
+      res.status(401).json(btoa(JSON.stringify({
         error: true,
         status: false,
         massage: "This user is not assigned role"
-      })
+      })))
     }
   })
 });
@@ -415,7 +405,7 @@ app.post("/add-role", verifytoken, (req, res) => {
     (err, result) => {
       if (err) throw err;
       if (result.length > 0) {
-        res.send("Display name is already exist");
+        res.status(302).json(btoa("Display name is already exist"));
       } else {
         con.query(
           "INSERT INTO `role`(`name`, `display_name`, `view`, `delete_d`, `update_d`, `play_btn`) VALUES (?,?,?,?,?,?)",
@@ -423,10 +413,10 @@ app.post("/add-role", verifytoken, (req, res) => {
           (err, result) => {
             if (err) throw err;
             if (result) {
-              res.status(200).json({
+              res.status(200).json(btoa(JSON.stringify({
                 error: false,
                 status: true,
-              });
+              })));
             }
           }
         );
@@ -437,9 +427,29 @@ app.post("/add-role", verifytoken, (req, res) => {
 app.post("/get-role", verifytoken, (req, res) => {
   con.query("select * from role", (err, result) => {
     if (err) throw err;
-    res.status(200).json({ data: result });
+    res.status(200).json(btoa(JSON.stringify({ data: result })));
   });
 });
+app.post("/del-role", verifytoken, (req, res) => {
+  con.query("DELETE FROM `assign_module` WHERE `role` = ?", [req.body.id], (err, result) => {
+    if (err) throw err;
+    if (result.length > 0) {
+      con.query("DELETE FROM `role` WHERE `id` = ?", [req.body.id], (err, result) => {
+        if (err) throw err;
+        if (result) {
+          res.status(200).json(btoa(JSON.stringify({ error: false, status: true, massage: 'Your Admin has been Deleted SuccessFully' })))
+        }
+      })
+    } else {
+      con.query("DELETE FROM `role` WHERE `id` = ?", [req.body.id], (err, result) => {
+        if (err) throw err;
+        if (result) {
+          res.status(200).json(btoa(JSON.stringify({ error: false, status: true, massage: 'Your Admin has been Deleted SuccessFully' })))
+        }
+      })
+    }
+  })
+})
 app.post("/status-role", verifytoken, (req, res) => {
   con.query(
     "UPDATE `role` SET `status`= ? WHERE `id`=?",
@@ -447,7 +457,7 @@ app.post("/status-role", verifytoken, (req, res) => {
     (err, result) => {
       if (err) throw err;
       if (result) {
-        res.status(200).send({ error: false, status: true })
+        res.status(200).json(btoa(JSON.stringify({ error: false, status: true })))
       }
     }
   );
@@ -455,23 +465,24 @@ app.post("/status-role", verifytoken, (req, res) => {
 app.post("/update-role", verifytoken, (req, res) => {
   con.query("UPDATE `role` SET `name`=?,`display_name`=?,`view`=?,`delete_d`=?,`update_d`=?,`play_btn`=? WHERE `id`=?", [req.body.name, req.body.dname, (req.body.view_d).toString(), (req.body.delete_d).toString(), (req.body.update_d).toString(), (req.body.play_d).toString(), req.body.id], (err, result) => {
     if (err) throw err;
-    res.status(200).json({ error: false, status: true });
+    res.status(200).json(btoa(JSON.stringify({ error: false, status: true })));
   });
 });
 app.post("/get-role-not-assign", verifytoken, (req, res) => {
   con.query("select * from role where role_assign = 'N'", (err, result) => {
     if (err) throw err;
-    res.status(200).json({ data: result });
+    res.status(200).json(btoa(JSON.stringify({ data: result })));
   });
 });
 app.post("/get-role-assign", verifytoken, (req, res) => {
   con.query("select * from role where role_assign = 'Y'", (err, result) => {
     if (err) throw err;
-    res.status(200).json({ data: result });
+    res.status(200).json(btoa(JSON.stringify({ data: result })));
   });
 });
 
 app.post("/add-module", verifytoken, (req, res) => {
+  console.log(req.body);
   con.query(
     "select * from module where module_name=?",
     [req.body.module_name],
@@ -484,12 +495,12 @@ app.post("/add-module", verifytoken, (req, res) => {
           (err, result) => {
             if (err) throw err;
             else {
-              res.status(200).send(true);
+              res.status(200).json(btoa(true));
             }
           }
         );
       } else {
-        res.send("Module name is already exist");
+        res.status(302).json(btoa("Module name is already exist"));
       }
     }
   );
@@ -498,7 +509,7 @@ app.post("/get-module", verifytoken, (req, res) => {
   con.query("select * from `module`", (err, result) => {
     if (err) throw err;
     else {
-      res.status(200).send({ data: result });
+      res.status(200).json(btoa(JSON.stringify({ data: result })));
     }
   });
 });
@@ -509,7 +520,7 @@ app.post("/status-module", verifytoken, (req, res) => {
     (err, result) => {
       if (err) throw err;
       else {
-        res.status(200).send(true);
+        res.status(200).json(btoa(true));
       }
     }
   );
@@ -521,7 +532,7 @@ app.post("/get-module-id", verifytoken, (req, res) => {
     (err, result) => {
       if (err) throw err;
       else {
-        res.status(200).send(result);
+        res.status(200).json(btoa(JSON.stringify(result)));
       }
     }
   );
@@ -533,10 +544,10 @@ app.post("/update-module", (req, res) => {
     (err, result) => {
       if (err) {
         if (err.code == "ER_DUP_ENTRY") {
-          res.status(403).send("module name is already exist");
+          res.status(403).json(btoa("module name is already exist"));
         }
       } else {
-        res.status(200).send(true);
+        res.status(200).json(btoa(true));
       }
     }
   );
@@ -550,12 +561,13 @@ app.post("/del-module", verifytoken, (req, res) => {
       con.query("DELETE FROM `module` where id=?", [req.body.id], (err, result) => {
         if (err) throw err;
         else {
-          res.status(200).send(true);
+          res.status(200).json(btoa(true));
         }
       });
     }
   })
 });
+
 app.post("/assign-module", verifytoken, (req, res) => {
   for (var module of req.body.module) {
     con.query("INSERT INTO `assign_module`(`role`, `module`) VALUES (?,?)", [req.body.role_id, module])
@@ -563,23 +575,36 @@ app.post("/assign-module", verifytoken, (req, res) => {
   con.query("UPDATE `role` SET `role_assign`='Y' WHERE `id`=?", [req.body.role_id], (err, result) => {
     if (err) throw err;
     if (result) {
-      res.status(200).json({
+      res.status(200).json(btoa(JSON.stringify({
         error: false,
         status: true,
         message: "Module Assign Successfully"
-      })
+      })))
     }
   })
 });
+app.post("/del-assign-module", verifytoken, (req, res) => {
+  con.query("DELETE FROM `assign_module` WHERE `role`=?", [req.body.id], (err, result) => {
+    if (err) throw err;
+    if(result) {
+      con.query("UPDATE `role` SET `role_assign`='N' WHERE `id`=?", [req.body.id], (err, result) => {
+        if (err) throw err;
+        if(result) {
+          res.status(200).json(btoa(true));
+        }
+      });
+    }
+  });
+});
 app.post("/get-assign-module", verifytoken, (req, res) => {
-  con.query('SELECT am.id,m.module_name,r.display_name FROM `assign_module` am INNER join module m on am.module = m.id INNER JOIN role r on am.role = r.id WHERE am.role = ?', [req.body.id], (err, result) => {
+  con.query('SELECT am.id,rm.role,m.module_name,r.display_name FROM `assign_module` am INNER join module m on am.module = m.id INNER JOIN role r on am.role = r.id WHERE am.role = ?', [req.body.id], (err, result) => {
     if (err) throw err;
     if (result) {
-      res.status(200).json({
+      res.status(200).json(btoa(JSON.stringify({
         error: false,
         status: true,
         data: result
-      })
+      })))
     }
   })
 });
@@ -592,11 +617,11 @@ app.post("/update-assign-module", verifytoken, (req, res) => {
       for (var module of req.body.module) {
         con.query("INSERT INTO `assign_module`(`role`, `module`) VALUES (?,?)", [req.body.role_id, module])
       }
-      res.status(200).json({
+      res.status(200).json(btoa(JSON.stringify({
         error: false,
         status: true,
         message: "Module Assign Upadated Successfully"
-      })
+      })))
     }
   })
 
@@ -605,24 +630,24 @@ app.post("/get-assign-module-id", verifytoken, (req, res) => {
   con.query('SELECT am.module FROM `assign_module` am INNER join module m on am.module = m.id INNER JOIN role r on am.role = r.id WHERE am.role = ?', [req.body.id], (err, result) => {
     if (err) throw err;
     if (result) {
-      res.status(200).json({
+      res.status(200).json(btoa(JSON.stringify({
         error: false,
         status: true,
         data: result
-      })
+      })))
     }
   })
 });
 
 app.post("/get-pay-method", verifytoken, (req, res) => {
-  con.query("select * from colorgame.payment_method", (err, result) => {
+  con.query("select * from payment_method", (err, result) => {
     if (err) throw err;
     if (result) {
-      res.status(200).send({
+      res.status(200).json(btoa(JSON.stringify({
         error: false,
         status: true,
         data: result,
-      });
+      })));
     }
   });
 });
@@ -634,11 +659,11 @@ app.post("/add-payment-details-upi", upload.single("qr_code"), verifytoken, (req
       (err, result) => {
         if (err) throw err;
         if (result.length > 0) {
-          res.status(302).json({
+          res.status(302).json(btoa(JSON.stringify({
             error: true,
             status: false,
             massage: "UPI Id is Already exist",
-          });
+          })));
         } else {
           if (req.body.payment_method === "Google Pay") {
             con.query(
@@ -653,11 +678,11 @@ app.post("/add-payment-details-upi", upload.single("qr_code"), verifytoken, (req
               (err, result) => {
                 if (err) throw err;
                 if (result) {
-                  res.status(200).json({
+                  res.status(200).json(btoa(JSON.stringify({
                     error: false,
                     status: true,
                     massage: "Insert Google Pay Details SuccessFully",
-                  });
+                  })));
                 }
               }
             );
@@ -674,11 +699,11 @@ app.post("/add-payment-details-upi", upload.single("qr_code"), verifytoken, (req
               (err, result) => {
                 if (err) throw err;
                 if (result) {
-                  res.status(200).json({
+                  res.status(200).json(btoa(JSON.stringify({
                     error: false,
                     status: true,
                     massage: "Insert Phone pe Details SuccessFully",
-                  });
+                  })));
                 }
               }
             );
@@ -695,11 +720,11 @@ app.post("/add-payment-details-upi", upload.single("qr_code"), verifytoken, (req
               (err, result) => {
                 if (err) throw err;
                 if (result) {
-                  res.status(200).json({
+                  res.status(200).json(btoa(JSON.stringify({
                     error: false,
                     status: true,
                     massage: "Insert Paytm Details SuccessFully",
-                  });
+                  })));
                 }
               }
             );
@@ -717,11 +742,11 @@ app.post("/add-payment-details-bank", verifytoken, (req, res) => {
     (err, result) => {
       if (err) throw err;
       if (result.length > 0) {
-        res.status(302).json({
+        res.status(302).json(btoa(JSON.stringify({
           error: true,
           status: false,
           massage: "Account Number is Already exist",
-        });
+        })));
       } else {
         con.query(
           "INSERT INTO `payment_details`(`paymethod_id`, `name`, `bank_name`, `account_no`, `ifsc_code`, `account_type`) VALUES (?,?,?,?,?,?)",
@@ -736,11 +761,11 @@ app.post("/add-payment-details-bank", verifytoken, (req, res) => {
           (err, result) => {
             if (err) throw err;
             if (result) {
-              res.status(200).json({
+              res.status(200).json(btoa(JSON.stringify({
                 error: false,
                 status: true,
                 massage: "Insert Bank Details SuccessFully",
-              });
+              })));
             }
           }
         );
@@ -750,12 +775,12 @@ app.post("/add-payment-details-bank", verifytoken, (req, res) => {
 });
 app.post("/get-payment-details", verifytoken, (req, res) => {
   con.query(
-    "select pd.id,pm.id as pm_id,pm.name as payment_method,pd.name,pd.UPI_id,pd.QR_code,pd.bank_name,pd.account_no,pd.ifsc_code,pd.account_type,pm.icon,pd.status from colorgame.payment_details as pd inner Join colorgame.payment_method as pm on pd.paymethod_id = pm.id where pm.name = ?;",
+    "select pd.id,pm.id as pm_id,pm.name as payment_method,pd.name,pd.UPI_id,pd.QR_code,pd.bank_name,pd.account_no,pd.ifsc_code,pd.account_type,pm.icon,pd.status from payment_details as pd inner Join payment_method as pm on pd.paymethod_id = pm.id where pm.name = ?;",
     [req.body.method],
     (err, result) => {
       if (err) throw err;
       else {
-        res.status(200).send({ data: result });
+        res.status(200).json(btoa(JSON.stringify({ data: result })));
       }
     }
   );
@@ -779,11 +804,11 @@ app.post("/status-payment-details", verifytoken, (req, res) => {
                 (err, result) => {
                   if (err) throw err;
                   if (result) {
-                    res.status(200).json({
+                    res.status(200).json(btoa(JSON.stringify({
                       error: false,
                       status: true,
                       massage: " Status Changed SuccessFully",
-                    });
+                    })));
                   }
                 }
               );
@@ -797,11 +822,11 @@ app.post("/status-payment-details", verifytoken, (req, res) => {
           (err, result) => {
             if (err) throw err;
             if (result) {
-              res.status(200).json({
+              res.status(200).json(btoa(JSON.stringify({
                 error: false,
                 status: true,
                 massage: " Status Changed SuccessFully",
-              });
+              })));
             }
           }
         );
@@ -816,21 +841,21 @@ app.post("/del-payment-details", verifytoken, (req, res) => {
     (err, result) => {
       if (err) {
         if (true == (err.sqlMessage == "Cannot delete or update a parent row: a foreign key constraint fails (`colorgame`.`deposit`, CONSTRAINT `paymethod_id` FOREIGN KEY (`paymethod_id`) REFERENCES `payment_details` (`id`))")) {
-          res.status(405).json({
+          res.status(405).json(btoa(JSON.stringify({
             error: true,
             status: false,
             massage: "This payment method is already Used",
-          });
+          })));
         } else {
           throw err;
         }
       }
       else {
-        res.status(200).json({
+        res.status(200).json(btoa(JSON.stringify({
           error: false,
           status: true,
           massage: "Your file has been deleted.",
-        });
+        })));
       }
     }
   );
@@ -842,15 +867,15 @@ app.post("/update-payment-details", upload.single("qr_code"), verifytoken, (req,
     (err, result) => {
       if (err) {
         if (err.code == "ER_DUP_ENTRY") {
-          res.status(403).send("UPI Id is already exist");
+          res.status(403).json(btoa("UPI Id is already exist"));
         }
       }
       if (result) {
-        res.status(200).send({
+        res.status(200).json(btoa(JSON.stringify({
           error: false,
           status: true,
           massage: "Update Details SuccessFully",
-        });
+        })));
       }
     }
   );
@@ -876,12 +901,12 @@ app.post("/update-bank-payment-details", verifytoken, (req, res) => {
               throw err;
             }
             if (result) {
-              res.status(200).send({ error: false, status: true, massage: "Details Updated SuccessFully" });
+              res.status(200).json(btoa(JSON.stringify({error: false, status: true, massage: "Details Updated SuccessFully" })));
             }
           }
         );
       } else {
-        res.status(302).send({ error: true, status: false, massage: "Account No is already exist" });
+        res.status(302).json(btoa(JSON.stringify({ error: true, status: false, massage: "Account No is already exist" })));
       }
     } else {
       con.query(
@@ -899,7 +924,7 @@ app.post("/update-bank-payment-details", verifytoken, (req, res) => {
             throw err;
           }
           if (result) {
-            res.status(200).send({ error: false, status: true, massage: "Details Updated SuccessFully" });
+            res.status(200).json(btoa(JSON.stringify({ error: false, status: true, massage: "Details Updated SuccessFully" })));
           }
         }
       );
@@ -910,16 +935,16 @@ app.post("/update-bank-payment-details", verifytoken, (req, res) => {
 
 app.post("/get-user-details", verifytoken, (req, res) => {
   con.query(
-    "select ud.id as id,ud.user_name,ud.uid,w.id as wid,w.wallet_balance,ud.status,ud.date from colorgame.user_details as ud inner join colorgame.wallet as w on ud.user_name=w.user_name;",
+    "SELECT * FROM `user_details`;",
     [req.body.method],
     (err, result) => {
       if (err) throw err;
       else {
-        res.status(200).send({
+        res.status(200).json(btoa(JSON.stringify({
           error: false,
           status: true,
           data: result,
-        });
+        })));
       }
     }
   );
@@ -931,11 +956,11 @@ app.post("/status-user-details", verifytoken, (req, res) => {
     (err, result) => {
       if (err) throw err;
       if (result) {
-        res.status(200).json({
+        res.status(200).json(btoa(JSON.stringify({
           error: false,
           status: true,
           massage: "Status Changed SuccessFully",
-        });
+        })));
       }
     }
   );
@@ -953,11 +978,11 @@ app.post("/del-user-details", verifytoken, (req, res) => {
           (err, result) => {
             if (err) throw err;
             else {
-              res.status(200).json({
+              res.status(200).json(btoa(JSON.stringify({
                 error: false,
                 status: true,
                 massage: "Your Details has been deleted.",
-              });
+              })));
             }
           }
         );
@@ -972,15 +997,15 @@ app.post("/update-user-details", verifytoken, (req, res) => {
     (err, result) => {
       if (err) {
         if (err.code == "ER_DUP_ENTRY") {
-          res.status(403).send("UPI Id is already exist");
+          res.status(403).json(btoa("UPI Id is already exist"));
         }
       }
       if (result) {
-        res.status(200).send({
+        res.status(200).json(btoa(JSON.stringify({
           error: false,
           status: true,
           massage: "Update Details SuccessFully",
-        });
+        })));
       }
     }
   );
@@ -989,57 +1014,57 @@ app.post("/update-user-details", verifytoken, (req, res) => {
 app.post("/get-deposit-request", verifytoken, (req, res) => {
   if (req.body.status === "Pending") {
     con.query(
-      "SELECT cd.id,cd.user_name,cd.image,cd.transaction_id,cd.reason,cd.payment,cd.balance,cd.status,cd.Approved_declined_By,cp.name as holder_name,cp.account_no,cp.account_type,cp.bank_name,cp.ifsc_code,cp.UPI_id,cd.date FROM colorgame.`deposit` as cd inner join colorgame.payment_details as cp on cd.paymethod_id = cp.id WHERE cd.`status` = 'Pending';",
+      "SELECT cd.id,cd.user_name,cd.image,cd.transaction_id,cd.reason,cd.payment,cd.balance,cd.status,cd.Approved_declined_By,cp.name as holder_name,cp.account_no,cp.account_type,cp.bank_name,cp.ifsc_code,cp.UPI_id,cd.date FROM `deposit` as cd inner join payment_details as cp on cd.paymethod_id = cp.id WHERE cd.`status` = 'Pending';",
       (err, result) => {
         if (err) throw err;
         if (result) {
-          res.status(200).send({
+          res.status(200).json(btoa(JSON.stringify({
             error: false,
             status: true,
             data: result,
-          });
+          })));
         }
       }
     );
   } else if (req.body.status === "Success") {
     con.query(
-      "SELECT cd.id,cd.user_name,cd.image,cd.transaction_id,cd.reason,cd.payment,cd.balance,cd.status,cd.Approved_declined_By,cp.name as holder_name,cp.account_no,cp.account_type,cp.bank_name,cp.ifsc_code,cp.UPI_id,cd.date FROM colorgame.`deposit` as cd inner join colorgame.payment_details as cp on cd.paymethod_id = cp.id WHERE cd.`status` = 'Success';",
+      "SELECT cd.id,cd.user_name,cd.image,cd.transaction_id,cd.reason,cd.payment,cd.balance,cd.status,cd.Approved_declined_By,cp.name as holder_name,cp.account_no,cp.account_type,cp.bank_name,cp.ifsc_code,cp.UPI_id,cd.date FROM `deposit` as cd inner join payment_details as cp on cd.paymethod_id = cp.id WHERE cd.`status` = 'Success';",
       (err, result) => {
         if (err) throw err;
         if (result) {
-          res.status(200).send({
+          res.status(200).json(btoa(JSON.stringify({
             error: false,
             status: true,
             data: result,
-          });
+          })));
         }
       }
     );
   } else if (req.body.status === "Canceled") {
     con.query(
-      "SELECT cd.id,cd.user_name,cd.image,cd.transaction_id,cd.reason,cd.payment,cd.balance,cd.status,cd.Approved_declined_By,cp.name as holder_name,cp.account_no,cp.account_type,cp.bank_name,cp.ifsc_code,cp.UPI_id,cd.date FROM colorgame.`deposit` as cd inner join colorgame.payment_details as cp on cd.paymethod_id = cp.id WHERE cd.`status` = 'Canceled';",
+      "SELECT cd.id,cd.user_name,cd.image,cd.transaction_id,cd.reason,cd.payment,cd.balance,cd.status,cd.Approved_declined_By,cp.name as holder_name,cp.account_no,cp.account_type,cp.bank_name,cp.ifsc_code,cp.UPI_id,cd.date FROM `deposit` as cd inner join payment_details as cp on cd.paymethod_id = cp.id WHERE cd.`status` = 'Canceled';",
       (err, result) => {
         if (err) throw err;
         if (result) {
-          res.status(200).send({
+          res.status(200).json(btoa(JSON.stringify({
             error: false,
             status: true,
             data: result,
-          });
+          })));
         }
       }
     );
   } else {
     con.query(
-      "SELECT cd.id,cd.user_name,cd.image,cd.transaction_id,cd.reason,cd.payment,cd.balance,cd.status,cd.Approved_declined_By,cp.name as holder_name,cp.account_no,cp.account_type,cp.bank_name,cp.ifsc_code,cp.UPI_id,cd.date FROM colorgame.`deposit` as cd inner join colorgame.payment_details as cp on cd.paymethod_id = cp.id;",
+      "SELECT cd.id,cd.user_name,cd.image,cd.transaction_id,cd.reason,cd.payment,cd.balance,cd.status,cd.Approved_declined_By,cp.name as holder_name,cp.account_no,cp.account_type,cp.bank_name,cp.ifsc_code,cp.UPI_id,cd.date FROM `deposit` as cd inner join payment_details as cp on cd.paymethod_id = cp.id;",
       (err, result) => {
         if (err) throw err;
         if (result) {
-          res.status(200).send({
+          res.status(200).json(btoa(JSON.stringify({
             error: false,
             status: true,
             data: result,
-          });
+          })));
         }
       }
     );
@@ -1064,11 +1089,11 @@ app.post("/approve-deposit-request", verifytoken, (req, res) => {
                     throw errr;
                   }
                   if (resu) {
-                    res.status(200).send({
+                    res.status(200).json(btoa(JSON.stringify({
                       error: false,
                       status: true,
                       massage: "Wallet Update SuccessFully",
-                    });
+                    })));
                   }
                 })
             }
@@ -1085,11 +1110,11 @@ app.post("/decline-deposit-request", verifytoken, (req, res) => {
     (err, resultt) => {
       if (err) throw err;
       if (resultt) {
-        res.status(200).send({
+        res.status(200).json(btoa(JSON.stringify({
           error: false,
           status: true,
           massage: "Update Deatils SuccessFully",
-        });
+        })));
       }
     }
   );
@@ -1103,7 +1128,7 @@ app.post("/get-bank-details", verifytoken, (req, res) => {
       (err, result) => {
         if (err) throw err;
         if (result) {
-          res.status(200).send({ error: false, status: true, data: result });
+          res.status(200).json(btoa(JSON.stringify({ error: false, status: true, data: result })));
         }
       }
     );
@@ -1114,7 +1139,7 @@ app.post("/get-bank-details", verifytoken, (req, res) => {
       (err, result) => {
         if (err) throw err;
         if (result) {
-          res.status(200).send({ error: false, status: true, data: result });
+          res.status(200).json(btoa(JSON.stringify({ error: false, status: true, data: result })));
         }
       }
     );
@@ -1125,7 +1150,7 @@ app.post("/get-bank-details", verifytoken, (req, res) => {
       (err, result) => {
         if (err) throw err;
         if (result) {
-          res.status(200).send({ error: false, status: true, data: result });
+          res.status(200).json(btoa(JSON.stringify({ error: false, status: true, data: result })));
         }
       }
     );
@@ -1133,7 +1158,7 @@ app.post("/get-bank-details", verifytoken, (req, res) => {
     con.query("SELECT * FROM `userbankdeatils`", (err, result) => {
       if (err) throw err;
       if (result) {
-        res.status(200).send({ error: false, status: true, data: result });
+        res.status(200).json(btoa(JSON.stringify({ error: false, status: true, data: result })));
       }
     });
   }
@@ -1145,11 +1170,11 @@ app.post("/approve-bank-details", verifytoken, (req, res) => {
     (error, result) => {
       if (error) throw error;
       if (result) {
-        res.status(200).send({
+        res.status(200).json(btoa(JSON.stringify({
           error: false,
           status: true,
           massage: "Approved Bank SuccessFully",
-        });
+        })));
       }
     }
   );
@@ -1161,11 +1186,11 @@ app.post("/decline-bank-details", verifytoken, (req, res) => {
     (err, resultt) => {
       if (err) throw err;
       if (resultt) {
-        res.status(200).send({
+        res.status(200).json(btoa(JSON.stringify({
           error: false,
           status: true,
           massage: "Decline Bank Details!",
-        });
+        })));
       }
     }
   );
@@ -1174,41 +1199,41 @@ app.post("/decline-bank-details", verifytoken, (req, res) => {
 app.post("/get-withdrawal-request", verifytoken, (req, res) => {
   if (req.body.status === "Pending") {
     con.query(
-      "SELECT w.id,w.user_name,w.balance,w.reason,w.Approved_declined_By,b.account_no,b.account_holder_name,b.account_type,b.bankname,b.ifsc_code,upi.name as upiname,upi.UPI_id,num.name,num.number,w.paytype,W.status,w.date  FROM colorgame.withdrawal as w left JOIN colorgame.userbankdeatils as b ON CASE WHEN w.paytype = 'Bank Transfer' THEN w.paymethod_id = b.id ELSE NULL END left JOIN colorgame.userupidetails as upi ON CASE WHEN w.paytype = 'UPI Id' THEN w.paymethod_id = upi.id ELSE NULL END left JOIN colorgame.usernumberdetails as num ON CASE WHEN w.paytype = 'Number' THEN w.paymethod_id = num.id ELSE NULL END where w.status='Pending'",
+      "SELECT w.id,w.user_name,w.balance,w.reason,w.Approved_declined_By,b.account_no,b.account_holder_name,b.account_type,b.bankname,b.ifsc_code,upi.name as upiname,upi.UPI_id,num.name,num.number,w.paytype,W.status,w.date  FROM withdrawal as w left JOIN userbankdeatils as b ON CASE WHEN w.paytype = 'Bank Transfer' THEN w.paymethod_id = b.id ELSE NULL END left JOIN userupidetails as upi ON CASE WHEN w.paytype = 'UPI Id' THEN w.paymethod_id = upi.id ELSE NULL END left JOIN usernumberdetails as num ON CASE WHEN w.paytype = 'Number' THEN w.paymethod_id = num.id ELSE NULL END where w.status='Pending'",
       (err, result) => {
         if (err) throw err;
         if (result) {
-          res.status(200).send({ error: false, status: true, data: result });
+          res.status(200).json(btoa(JSON.stringify({ error: false, status: true, data: result })));
         }
       }
     );
   } else if (req.body.status === "Success") {
     con.query(
-      "SELECT w.id,w.user_name,w.balance,w.reason,w.Approved_declined_By,b.account_no,b.account_holder_name,b.account_type,b.bankname,b.ifsc_code,upi.name as upiname,upi.UPI_id,num.name,num.number,w.paytype,W.status,w.date  FROM colorgame.withdrawal as w left JOIN colorgame.userbankdeatils as b ON CASE WHEN w.paytype = 'Bank Transfer' THEN w.paymethod_id = b.id ELSE NULL END left JOIN colorgame.userupidetails as upi ON CASE WHEN w.paytype = 'UPI Id' THEN w.paymethod_id = upi.id ELSE NULL END left JOIN colorgame.usernumberdetails as num ON CASE WHEN w.paytype = 'Number' THEN w.paymethod_id = num.id ELSE NULL END where w.status='Success'",
+      "SELECT w.id,w.user_name,w.balance,w.reason,w.Approved_declined_By,b.account_no,b.account_holder_name,b.account_type,b.bankname,b.ifsc_code,upi.name as upiname,upi.UPI_id,num.name,num.number,w.paytype,W.status,w.date  FROM withdrawal as w left JOIN userbankdeatils as b ON CASE WHEN w.paytype = 'Bank Transfer' THEN w.paymethod_id = b.id ELSE NULL END left JOIN userupidetails as upi ON CASE WHEN w.paytype = 'UPI Id' THEN w.paymethod_id = upi.id ELSE NULL END left JOIN usernumberdetails as num ON CASE WHEN w.paytype = 'Number' THEN w.paymethod_id = num.id ELSE NULL END where w.status='Success'",
       (err, result) => {
         if (err) throw err;
         if (result) {
-          res.status(200).send({ error: false, status: true, data: result });
+          res.status(200).json(btoa(JSON.stringify({ error: false, status: true, data: result })));
         }
       }
     );
   } else if (req.body.status === "Canceled") {
     con.query(
-      "SELECT w.id,w.user_name,w.balance,w.reason,w.Approved_declined_By,b.account_no,b.account_holder_name,b.account_type,b.bankname,b.ifsc_code,upi.name as upiname,upi.UPI_id,num.name,num.number,w.paytype,W.status,w.date  FROM colorgame.withdrawal as w left JOIN colorgame.userbankdeatils as b ON CASE WHEN w.paytype = 'Bank Transfer' THEN w.paymethod_id = b.id ELSE NULL END left JOIN colorgame.userupidetails as upi ON CASE WHEN w.paytype = 'UPI Id' THEN w.paymethod_id = upi.id ELSE NULL END left JOIN colorgame.usernumberdetails as num ON CASE WHEN w.paytype = 'Number' THEN w.paymethod_id = num.id ELSE NULL END where w.status='Canceled'",
+      "SELECT w.id,w.user_name,w.balance,w.reason,w.Approved_declined_By,b.account_no,b.account_holder_name,b.account_type,b.bankname,b.ifsc_code,upi.name as upiname,upi.UPI_id,num.name,num.number,w.paytype,W.status,w.date  FROM withdrawal as w left JOIN userbankdeatils as b ON CASE WHEN w.paytype = 'Bank Transfer' THEN w.paymethod_id = b.id ELSE NULL END left JOIN userupidetails as upi ON CASE WHEN w.paytype = 'UPI Id' THEN w.paymethod_id = upi.id ELSE NULL END left JOIN usernumberdetails as num ON CASE WHEN w.paytype = 'Number' THEN w.paymethod_id = num.id ELSE NULL END where w.status='Canceled'",
       (err, result) => {
         if (err) throw err;
         if (result) {
-          res.status(200).send({ error: false, status: true, data: result });
+          res.status(200).json(btoa(JSON.stringify({ error: false, status: true, data: result })));
         }
       }
     );
   } else {
     con.query(
-      "SELECT w.id,w.user_name,w.balance,w.reason,w.Approved_declined_By,b.account_no,b.account_holder_name,b.account_type,b.bankname,b.ifsc_code,upi.name as upiname,upi.UPI_id,num.name,num.number,w.paytype,W.status,w.date FROM colorgame.withdrawal as w left JOIN colorgame.userbankdeatils as b ON CASE WHEN w.paytype = 'Bank Transfer' THEN w.paymethod_id = b.id ELSE NULL END left JOIN colorgame.userupidetails as upi ON CASE WHEN w.paytype = 'UPI Id' THEN w.paymethod_id = upi.id ELSE NULL END left JOIN colorgame.usernumberdetails as num ON CASE WHEN w.paytype = 'Number' THEN w.paymethod_id = num.id ELSE NULL END",
+      "SELECT w.id,w.user_name,w.balance,w.reason,w.Approved_declined_By,b.account_no,b.account_holder_name,b.account_type,b.bankname,b.ifsc_code,upi.name as upiname,upi.UPI_id,num.name,num.number,w.paytype,W.status,w.date FROM withdrawal as w left JOIN userbankdeatils as b ON CASE WHEN w.paytype = 'Bank Transfer' THEN w.paymethod_id = b.id ELSE NULL END left JOIN userupidetails as upi ON CASE WHEN w.paytype = 'UPI Id' THEN w.paymethod_id = upi.id ELSE NULL END left JOIN usernumberdetails as num ON CASE WHEN w.paytype = 'Number' THEN w.paymethod_id = num.id ELSE NULL END",
       (err, result) => {
         if (err) throw err;
         if (result) {
-          res.status(200).send({ error: false, status: true, data: result });
+          res.status(200).json(btoa(JSON.stringify({ error: false, status: true, data: result })));
         }
       }
     );
@@ -1226,11 +1251,11 @@ app.post("/approve-withdrawal-request", verifytoken, (req, res) => {
             throw errr;
           }
           if (resu) {
-            res.status(200).send({
+            res.status(200).json(btoa(JSON.stringify({
               error: false,
               status: true,
               massage: "Approved User Details SuccessFully",
-            });
+            })));
           }
         })
       }
@@ -1250,11 +1275,11 @@ app.post("/decline-withdrawal-request", verifytoken, (req, res) => {
           (err, resultt) => {
             if (err) throw err;
             if (resultt) {
-              res.status(200).send({
+              res.status(200).json(btoa(JSON.stringify({
                 error: false,
                 status: true,
                 massage: "Wallet Update SuccessFully",
-              });
+              })));
             }
           }
         );
@@ -1281,18 +1306,18 @@ app.post("/add-team", verifytoken, (req, res) => {
                 [req.body.team_name, req.body.short_name],
                 (err, result) => {
                   if (err) throw err;
-                  else {
-                    res.status(200).send(true);
+                  if(result) {
+                    res.status(200).json(btoa(true));
                   }
                 }
               );
             } else {
-              res.status(302).send("Shortname is already exist");
+              res.status(302).json(btoa("Shortname is already exist"));
             }
           }
         );
       } else {
-        res.status(302).send("Teamname is already exist");
+        res.status(302).json(btoa("Teamname is already exist"));
       }
     }
   );
@@ -1301,7 +1326,7 @@ app.post("/get-team", verifytoken, (req, res) => {
   con.query("select * from `teams`", (err, result) => {
     if (err) throw err;
     else {
-      res.status(200).send({ data: result });
+      res.status(200).json(btoa(JSON.stringify({ data: result })));
     }
   });
 });
@@ -1312,7 +1337,7 @@ app.post("/status-team", verifytoken, (req, res) => {
     (err, result) => {
       if (err) throw err;
       else {
-        res.status(200).send(true);
+        res.status(200).json(btoa(true));
       }
     }
   );
@@ -1326,14 +1351,14 @@ app.post("/update-team", verifytoken, (req, res) => {
         if (err.code == "ER_DUP_ENTRY") {
           const bearer = ((err.sqlMessage.split(" ")).pop().split(".")).pop().split("'");
           if (bearer[0] == "short_name") {
-            res.status(403).send("Shortname is already exist");
+            res.status(403).json(btoa("Shortname is already exist"));
           }
           if (bearer[0] == "team_name") {
-            res.status(403).send("Teamname is already exist");
+            res.status(403).json(btoa("Teamname is already exist"));
           }
         }
       } else {
-        res.status(200).send(true);
+        res.status(200).json(btoa(true));
       }
     }
   );
@@ -1342,7 +1367,7 @@ app.post("/del-team", verifytoken, (req, res) => {
   con.query("DELETE FROM `teams` where id=?", [req.body.id], (err, result) => {
     if (err) throw err;
     else {
-      res.status(200).send(true);
+      res.status(200).json(btoa(true));
     }
   });
 });
@@ -1360,12 +1385,12 @@ app.post("/add-series", verifytoken, (req, res) => {
           (err, result) => {
             if (err) throw err;
             if (result) {
-              res.status(200).send(true);
+              res.status(200).json(btoa(true));
             }
           }
         );
       } else {
-        res.status(302).send("Teamname is already exist");
+        res.status(302).json(btoa("Teamname is already exist"));
       }
     }
   );
@@ -1374,7 +1399,7 @@ app.post("/get-series", verifytoken, (req, res) => {
   con.query("select * from `series`", (err, result) => {
     if (err) throw err;
     else {
-      res.status(200).send({ data: result });
+      res.status(200).json(btoa(JSON.stringify({ data: result })));
     }
   });
 });
@@ -1385,7 +1410,7 @@ app.post("/status-series", verifytoken, (req, res) => {
     (err, result) => {
       if (err) throw err;
       else {
-        res.status(200).send(true);
+        res.status(200).json(btoa(true));
       }
     }
   );
@@ -1399,11 +1424,11 @@ app.post("/update-series", verifytoken, (req, res) => {
         if (err.code == "ER_DUP_ENTRY") {
           const bearer = ((err.sqlMessage.split(" ")).pop().split(".")).pop().split("'");
           if (bearer[0] == "series_name") {
-            res.status(403).send("Series name is already exist");
+            res.status(403).json(btoa("Series name is already exist"));
           }
         }
       } if(result) {
-        res.status(200).send(true);
+        res.status(200).json(btoa(true));
       }
     }
   );
@@ -1412,7 +1437,7 @@ app.post("/del-series", verifytoken, (req, res) => {
   con.query("DELETE FROM `series` where id=?", [req.body.id], (err, result) => {
     if (err) throw err;
     else {
-      res.status(200).send(true);
+      res.status(200).json(btoa(true));
     }
   });
 });
@@ -1424,37 +1449,16 @@ app.post("/add-match", verifytoken, (req, res) => {
     (err, result) => {
       if (err) throw err;
       if (result) {
-        res.status(200).send(true);
+        res.status(200).json(btoa(true));
       }
     }
   );
-  // con.query(
-  //   "SELECT * FROM `series` WHERE `series_name` = ?",
-  //   [req.body.series_name],
-  //   (err, result) => {
-  //     if (err) throw err;
-  //     if (result.length == 0) {
-  //       con.query(
-  //         "INSERT INTO `match`( `team1_id`, `team2_id`, `series_id`, `match_date`) VALUES (?,?,?,?)",
-  //         [req.body.series_name, req.body.series_type],
-  //         (err, result) => {
-  //           if (err) throw err;
-  //           if (result) {
-  //             res.status(200).send(true);
-  //           }
-  //         }
-  //       );
-  //     } else {
-  //       res.status(302).send("Teamname is already exist");
-  //     }
-  //   }
-  // );
 });
 app.post("/get-match", verifytoken, (req, res) => {
   con.query("SELECT m.id,t1.team_name as team1_name,t2.team_name as team2_name,s.series_name,m.team1_id,m.team2_id,m.series_id,m.result,m.status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id", (err, result) => {
     if (err) throw err;
     else {
-      res.status(200).send({ data: result });
+      res.status(200).json(btoa(JSON.stringify({ data: result })));
     }
   });
 });
@@ -1465,7 +1469,7 @@ app.post("/status-match", verifytoken, (req, res) => {
     (err, result) => {
       if (err) throw err;
       else {
-        res.status(200).send(true);
+        res.status(200).json(btoa(true));
       }
     }
   );
@@ -1479,11 +1483,11 @@ app.post("/update-match", verifytoken, (req, res) => {
         if (err.code == "ER_DUP_ENTRY") {
           const bearer = ((err.sqlMessage.split(" ")).pop().split(".")).pop().split("'");
           if (bearer[0] == "series_name") {
-            res.status(403).send("Series name is already exist");
+            res.status(403).json(btoa("Series name is already exist"));
           }
         }
       } if(result) {
-        res.status(200).send(true);
+        res.status(200).json(btoa(true));
       }
     }
   );
@@ -1492,7 +1496,7 @@ app.post("/del-match", verifytoken, (req, res) => {
   con.query("DELETE FROM `match` where id=?", [req.body.id], (err, result) => {
     if (err) throw err;
     else {
-      res.status(200).send(true);
+      res.status(200).json(btoa(true));
     }
   });
 });
@@ -1500,7 +1504,7 @@ app.post("/get-match-by-id", verifytoken, (req, res) => {
   con.query("SELECT m.id,t1.team_name as team1_name,t1.short_name as t1_sname,t2.team_name as team2_name,t2.short_name as t2_sname,s.series_name,m.team1_id,m.team2_id,m.series_id,m.result,m.status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id where `series_id` = ?",[req.body.id], (err, result) => {
     if (err) throw err;
     else {
-      res.status(200).send({ data: result });
+      res.status(200).json(btoa(JSON.stringify({ data: result })));
     }
   });
 });
@@ -1512,7 +1516,7 @@ app.post("/add-prediction", verifytoken, (req, res) => {
     (err, result) => {
       if (err) throw err;
       if (result) {
-        res.status(200).send(true);
+        res.status(200).json(btoa(true));
       }
     }
   );
@@ -1521,7 +1525,7 @@ app.post("/get-prediction", verifytoken, (req, res) => {
   con.query("SELECT (SELECT `team_name` FROM `teams` WHERE `id` = m.team1_id) as team1_name,(SELECT `short_name` FROM `teams` WHERE `id` = m.team1_id) as team1_sname,(SELECT `team_name` FROM `teams` WHERE `id` = m.team2_id) as team2_name,(SELECT `short_name` FROM `teams` WHERE `id` = m.team2_id) as team2_sname,(SELECT `series_type` FROM `series` WHERE `id` = m.series_id) as series_type,(SELECT `series_name` FROM `series` WHERE `id` = m.series_id) as series_name,mp.pre_question,mp.pre_answer,mp.status,m.match_date FROM `match_prediction` as mp INNER join `match` as m on mp.match_id = m.id", (err, result) => {
     if (err) throw err;
     else {
-      res.status(200).send({ data: result });
+      res.status(200).json(btoa(JSON.stringify({ data: result })));
     }
   });
 });
@@ -1532,7 +1536,7 @@ app.post("/status-prediction", verifytoken, (req, res) => {
     (err, result) => {
       if (err) throw err;
       else {
-        res.status(200).send(true);
+        res.status(200).json(btoa(true));
       }
     }
   );
@@ -1546,11 +1550,11 @@ app.post("/update-prediction", verifytoken, (req, res) => {
         if (err.code == "ER_DUP_ENTRY") {
           const bearer = ((err.sqlMessage.split(" ")).pop().split(".")).pop().split("'");
           if (bearer[0] == "series_name") {
-            res.status(403).send("Series name is already exist");
+            res.status(403).json(btoa("Series name is already exist"));
           }
         }
       } if (result) {
-        res.status(200).send(true);
+        res.status(200).json(btoa(true));
       }
     }
   );
@@ -1559,7 +1563,7 @@ app.post("/del-prediction", verifytoken, (req, res) => {
   con.query("DELETE FROM `match_prediction` where id=?", [req.body.id], (err, result) => {
     if (err) throw err;
     else {
-      res.status(200).send(true);
+      res.status(200).json(btoa(true));
     }
   });
 });
