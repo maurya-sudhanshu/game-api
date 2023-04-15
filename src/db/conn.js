@@ -3,8 +3,8 @@ const con = mysql.createPool({
   connectionLimit: 10,
   host: "localhost",
   port: 3306,
-  user: "myadmin",
-  password: "root",
+  user: "root",
+  password: "",
   database: "game_prediction",
   multipleStatements:true
 });
