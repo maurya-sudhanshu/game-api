@@ -831,6 +831,20 @@ app.post("/get-match-prediction", verifytoken, (req, res) => {
     }
   });
 });
+app.post("/get-total-share", verifytoken, (req, res) => {
+  con.query("SELECT COUNT(*) as total_reffer,(if(COUNT(*) = 5,'Y','N')) as reffed FROM `user_details` WHERE `reffer_by` = (SELECT `referral_id` FROM `user_details` WHERE `user_name` = ?)",[req.body.mobile], (err, result) => {
+    if (err) {
+      throw err;
+    }
+    if (result) {
+      res.status(200).send({
+        error: false,
+        status: true,
+        data: result
+      })
+    }
+  })
+});
 
 app.post("/get-current-time", verifytoken, (req, res) => {
   res.send({ error: false, status: true, currentTime: new Date() });

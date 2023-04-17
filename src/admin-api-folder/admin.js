@@ -1518,7 +1518,7 @@ app.post("/add-match", verifytoken, (req, res) => {
 });
 app.post("/get-match", verifytoken, (req, res) => {
   req.body = JSON.parse(atob(req.body.data));
-  con.query("SELECT m.id,t1.team_name as team1_name,t2.team_name as team2_name,s.series_name,m.team1_id,m.team2_id,m.series_id,m.result,m.status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id", (err, result) => {
+  con.query("SELECT m.id,t1.team_name as team1_name,t2.team_name as team2_name,s.series_name,(IF(DATEDIFF(m.match_date,CURDATE())=0, 'T', IF(DATEDIFF(m.match_date,CURDATE())>0, 'U', 'P'))) as match_status,m.status,m.match_date FROM `match` as m INNER join teams as t1 on m.team1_id = t1.id INNER join teams as t2 on m.team2_id = t2.id INNER join series as s on s.id = m.series_id;", (err, result) => {
     if (err) throw err;
     else {
       res.status(200).json(btoa(JSON.stringify({ data: result })));
