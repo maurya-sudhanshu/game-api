@@ -1632,14 +1632,14 @@ app.post("/update-prediction", verifytoken, (req, res) => {
 });
 app.post("/del-prediction", verifytoken, (req, res) => {
   req.body = JSON.parse(atob(req.body.data));
-  con.query("DELETE FROM `match_prediction` where id=?", [req.body.id], (err, result) => {
+  con.query("DELETE FROM `match_prediction` where id=?", [ req.body.id], (err, result) => {
     if (err) throw err;
     else {
       res.status(200).json(btoa(true));
     }
   });
 });
-
+      
 function verifytoken(req, res, next) {
   const bearerHeader = req.headers["authorization"];
   if (typeof bearerHeader !== "undefined") {
